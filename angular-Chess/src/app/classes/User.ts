@@ -4,7 +4,7 @@ export class User {
     private _name: string;
     private _id: Guid;
     
-    User(name: string) {
+    constructor(name: string) {
         this._name = name;
         this._id = Guid.create();
     }
@@ -17,7 +17,7 @@ export class User {
         return this._name;
     }
     
-    set name(newName: String): void {
+    set name(newName: string) {
         newName = newName.trim();
         if (newName === "")
         {
@@ -26,5 +26,4 @@ export class User {
         
         this._name = newName;
     }
-    
 }

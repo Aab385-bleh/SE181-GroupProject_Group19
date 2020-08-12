@@ -3,6 +3,7 @@ import { WebSocketService } from '../services/web-socket.service';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { User } from '../classes/User'
 import { InvitePopupComponent } from '../invite-popup/invite-popup.component';
+import { Guid } from "guid-typescript";
 
 @Component({
   selector: 'app-mainMenu',
@@ -35,10 +36,22 @@ export class MainMenuComponent implements OnInit {
     getUsers() {
       this.webSocketService.getConnectedUsers('director').subscribe(response => {
         if (response) {
-          //Response is Json, have to convert json into proper format
-          /*only concievable way to convert Json data into Userobjects is add way to make 
-          users with an ID input*/
-          this.userList = response;
+          //Response is Json, have to convert json into proper Object
+          /*Expecting Response to look something like this
+          response = {'users': [{
+              'name': 'John',
+              'id': '4337b01a-7ff8-47b9-80aa-d5b734b4ec13'
+            }, 
+            {
+              'name': 'default Dan',
+              'id': '9a014117-bda0-412f-9ec1-5fa4273a1257'
+            }]
+            }*/
+            var newUserList: User[] = [];
+            for (var i in response.users) {
+              var user = new User(response.users[i].name, Guid.parse(response.users[i].id));
+              this.userList.push(user);
+            }
         }
       },
       //add something to find and remove localUser from the list here later
@@ -47,10 +60,8 @@ export class MainMenuComponent implements OnInit {
       () => console.log('Observer for getting Users got a complete notification'));
     }
     
-    requestUserForGame(invitee: User) {
-      var gameInviteObject = {
-        User
-      }
+    requestUserForGame(invitedUser: User) {
+      this.webSocketService.requestUserForGame(this.localUser, invitedUser);
     }
 
     openGameInviteDialog(user: User) {

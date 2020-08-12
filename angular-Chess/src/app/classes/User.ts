@@ -4,9 +4,9 @@ export class User {
     private _name: string;
     private _id: Guid;
     
-    constructor(name: string) {
+    constructor(name: string, id?: Guid) {
         this._name = name;
-        this._id = Guid.create();
+        this._id = id || Guid.create();
     }
     
     get id(): Guid {

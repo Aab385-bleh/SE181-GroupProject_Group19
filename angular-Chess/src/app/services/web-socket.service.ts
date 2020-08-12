@@ -46,7 +46,13 @@ export class WebSocketService {
   }
 
   requestUserForGame(inviter: User, invitee: User) {
-    
+    var gameInviteObject = {
+      inviter: inviter,
+      invitee: invitee
+    };
+    //socket.emit should stringify and ensure that gameinviteobject is automatically stringifyied
+    //and parsed back into JSON object
+    this.socket.emit('requestUserForGame', gameInviteObject);
   }
 
   //creates and returns observable of backend emiting event for client recieving invite requests

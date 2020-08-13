@@ -10,7 +10,7 @@ import { FormControl, Validators, FormGroup } from '@angular/forms';
 export class InvitePopupComponent implements OnInit {
 
   inviteResponseForm: FormGroup;
-  acceptInvite: boolean;
+  inviteAccepted: boolean;
   senderName: string;
 
   constructor(public dialogRef: MatDialogRef<InvitePopupComponent>,
@@ -22,17 +22,17 @@ export class InvitePopupComponent implements OnInit {
 
   respondToInvite(value: string) {
     if (value == 'true') {
-      this.acceptInvite = true;
+      this.inviteAccepted = true;
     } else {
-      this.acceptInvite = false;
+      this.inviteAccepted = false;
     }
     this.closeDialog();
   }
 
   closeDialog() {
-    if (this.acceptInvite != null) {
+    if (this.inviteAccepted != null) {
       this.dialogRef.close({
-        acceptInvite: this.acceptInvite,
+        inviteAccepted: this.inviteAccepted,
       });
     }
   }

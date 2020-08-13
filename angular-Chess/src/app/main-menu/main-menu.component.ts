@@ -18,78 +18,91 @@ export class MainMenuComponent implements OnInit {
   private menuRoom = "menuRoom" // Hardcoded MenuRoom Name
 
   constructor(public webSocketService: WebSocketService,
-    public dialog: MatDialog) { }
+  public dialog: MatDialog) { }
 
-    ngOnInit() {
-      this.localUser = new User('DefaultDan');
-      this.webSocketService.joinRoom(this.menuRoom);
-      this.getUsers();
-      this.webSocketService.getGameInvitesObservable().subscribe(response => {
+  ngOnInit() {
+    this.localUser = new User('DefaultDan');
+    this.webSocketService.joinRoom(this.menuRoom);
+    this.getUsers();
+    this.webSocketService.getGameInvitesObservable().subscribe(response => {
         if (response) {
-          this.openGameInviteDialog(response.invitee);
+          var inviter = new User(response.inviter.name, response.inviter.id);
+          this.openGameInviteDialog(inviter);
         }
       },
       err => console.error('Observer for InviteReception got an error: ' + err), 
       () => console.log('Observer for InviteReception got a complete notification'));
-    }
-
-    getUsers() {
-      this.webSocketService.getConnectedUsers('director').subscribe(response => {
+    
+    
+    this.webSocketService.getGameInviteResponsesObservable().subscribe(response => {
         if (response) {
-          //Response is Json, have to convert json into proper Object
-          /*Expecting Response to look something like this
-          response = {'users': [{
-              'name': 'John',
-              'id': '4337b01a-7ff8-47b9-80aa-d5b734b4ec13'
-            }, 
-            {
-              'name': 'default Dan',
-              'id': '9a014117-bda0-412f-9ec1-5fa4273a1257'
-            }]
-            }*/
-            var newUserList: User[] = [];
-            for (var i in response.users) {
-              var user = new User(response.users[i].name, Guid.parse(response.users[i].id));
-              this.userList.push(user);
-            }
+          /*TODO: In case of invite not being accepted, make popup for User to let them know that their
+          invite to X User was rejected (or failed due to an error with the invite modal on their end)
+          make method for opening a GameBoard component in a new tab and join room with roomname given in
+          "response", as that while be the name of the room where the users will emit their moves for the game*/
+          
+
         }
       },
-      //add something to find and remove localUser from the list here later
-      //or maybe just have the html omit/skip it if possible
-      err => console.error('Observer for getting Users got an error: ' + err),
-      () => console.log('Observer for getting Users got a complete notification'));
-    }
-    
-    requestUserForGame(invitedUser: User) {
-      this.webSocketService.requestUserForGame(this.localUser, invitedUser);
-    }
+      err => console.error('Observer for InviteResponseReception got an error: ' + err), 
+      () => console.log('Observer for InviteResponseReception got a complete notification'));
+  }
 
-    openGameInviteDialog(user: User) {
-      const dialogConfig = new MatDialogConfig();
-      var dialogRef;
-
-      dialogConfig.disableClose = true;
-      dialogConfig.autoFocus = true;
-      dialogConfig.width = '300px';
-
-      dialogConfig.data = {
-        name: user.name
-      };
-      dialogRef = this.dialog.open(InvitePopupComponent, dialogConfig);
-
-      dialogRef.afterClosed().subscribe(response => {
-        if (response) {
-          if (response.acceptInvite == true) {
-
-          } else if (response.acceptInvite == false){
-
-          } else {
-            console.error(`Error! Response object recieved from invite-popup Dialog either has 
-            no "acceptInvite" property or acceptInvite property was not set`);
-          }
-        } else {
-          console.error('Error! No response object recieved from invite-popup Dialog');
+  getUsers() {
+    this.webSocketService.getConnectedUsers('director').subscribe(response => {
+      if (response) {
+        //Response is Json, have to convert json into proper Object
+        var newUserList: User[] = [];
+        for (var i in response.users) {
+          var user = new User(response.users[i].name, Guid.parse(response.users[i].id));
+          this.userList.push(user);
         }
-      });
-    }
+      }
+    },
+    //add something to find and remove localUser from the list here later
+    //or maybe just have the html omit/skip it if possible
+    err => console.error('Observer for getting Users got an error: ' + err),
+    () => console.log('Observer for getting Users got a complete notification'));
+  }
+  
+  requestUserForGame(invitedUser: User) {
+    this.webSocketService.requestUserForGame(this.localUser, invitedUser);
+  }
+
+  openGameInviteDialog(inviter: User) {
+    const dialogConfig = new MatDialogConfig();
+    var dialogRef;
+
+    dialogConfig.disableClose = true;
+    dialogConfig.autoFocus = true;
+    dialogConfig.width = '300px';
+
+    dialogConfig.data = {
+      name: inviter.name
+    };
+    dialogRef = this.dialog.open(InvitePopupComponent, dialogConfig);
+
+    dialogRef.afterClosed().subscribe(response => {
+      //can't do just if (response.inviteAccepted) because it's a boolean so it will fail if it is fals
+      if (response) {
+        if (typeof response.inviteAccepted === 'boolean') {
+          this.webSocketService.sendGameInviteResponse(inviter, this.localUser, response.inviteAccepted);
+        } else {
+          console.error(`Error! Response object recieved from invite-popup Dialog either has 
+          no "inviteAccepted" property or inviteAccepted property's value was never set.`);
+
+          //other user should stil get a response
+          this.webSocketService.sendGameInviteResponse(inviter, this.localUser, false);  
+        }
+      } else {
+        console.error('Error! No response object recieved from invite-popup Dialog');
+
+        //other user should stil get a response
+        this.webSocketService.sendGameInviteResponse(inviter, this.localUser, false);
+      }
+    });
+  }
+
+  //
+  reactToInviteResponse()
 }

@@ -3,221 +3,239 @@
 board1 = []
 
 #STANDARD BOARD
-#Square Structure -> [<piece>,<Moved Yet>]
+#Square Structure -> [<piece>,<Moved Yet>] (0- not moved, 1- moved, 2- no piece)
 board1.append([["r",0],["n",0],["b",0],["q",0],["k",0],["b",0],["n",0],["r",0]])
 board1.append([["p",0],["p",0],["p",0],["p",0],["p",0],["p",0],["p",0],["p",0]])
 for n in range(4):
-   board1.append([[".",0] *8])
+   board1.append([[".",0],[".",0],[".",0],[".",0],[".",0],[".",0],[".",0],[".",0]])
 board1.append([["P",0],["P",0],["P",0],["P",0],["P",0],["P",0],["P",0],["P",0]])
 board1.append([["R",0],["N",0],["B",0],["Q",0],["K",0],["B",0],["N",0],["R",0]])
 
-#NOT STANDARD BOARD
-
-#board1.append([[".",0],[".",0],[".",0],[".",0],[".",0],[".",0],[".",0],[".",0]])
-#board1.append(['.','.','.','.','.','.','.','.'])
-#board1.append(['.','.','.','.','k','.','.','.'])
-#board1.append(['.','.','.','.','.','p','.','.'])
-#board1.append(['.','.','.','r','k','.','r','.'])
-#board1.append(['.','.','.','.','k','.','.','.'])
-#board1.append(['.','.','p','.','.','.','p','.'])
-#board1.append(['.','.','.','.','.','.','.','.'])
-
-# Function: MoveValidation
-# Description: Checks for Legal Move (Follows Piece Movement, Does Not Attack Own Piece)
-# Arguements:
-# Return: True/False
-def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY):
-    legalMoves=[]
+# Function: Findmoves
+# Description: Determines all the legal moves that can be made for a given piece (Follows Piece Movement, Does Not Attack Own Piece)
+# Arguements: board, currentPosX, currentPosY
+# Return: moves[]
+def findmoves(board, currentPosX, currentPosY):
+    moves=[]
 
     if (board[currentPosX][currentPosY][0]) in ('p'):
-        legalMoves.append([currentPosX+1,currentPosY])
+        moves.append([currentPosX+1,currentPosY])
         if (board[currentPosX][currentPosY][1] == 0):   #If in Starting Position
-            legalMoves.append([currentPosX+2,currentPosY])
+            moves.append([currentPosX+2,currentPosY])
         if (currentPosY < 7 and board[currentPosX+1][currentPosY+1] != "."): #If attacking to left
-            legalMoves.append([currentPosX+1,currentPosY+1])
+            moves.append([currentPosX+1,currentPosY+1])
         if (currentPosY > 0 and board[currentPosX+1][currentPosY-1] != "."): #If attacking to Right
-            legalMoves.append([currentPosX+1,currentPosY-1])
+            moves.append([currentPosX+1,currentPosY-1])
     elif (board[currentPosX][currentPosY][0]) in ('P'):
-        legalMoves.append([currentPosX-1,currentPosY])
-        if (board[currentPosX][currentPosY][1] = 0):   #If in Starting Position
-            legalMoves.append([currentPosX-2,currentPosY])
+        moves.append([currentPosX-1,currentPosY])
+        if (board[currentPosX][currentPosY][1] == 0):   #If in Starting Position
+            moves.append([currentPosX-2,currentPosY])
         if (currentPosY < 7 and board[currentPosX-1][currentPosY+1] != "."): #If attacking to Right
-            legalMoves.append([currentPosX-1,currentPosY+1])
+            moves.append([currentPosX-1,currentPosY+1])
         if (currentPosY > 0 and board[currentPosX-1][currentPosY-1] != "."): #If attacking to left
-            legalMoves.append([currentPosX-1,currentPosY-1])
+            moves.append([currentPosX-1,currentPosY-1])
     elif (board[currentPosX][currentPosY][0]) in ('r', 'R'):
         print("rook")
         #Move Along X
         i=currentPosX
         while (i < 7):
             if (board[i+1][currentPosY] == "."):
-                legalMoves.append([i+1,currentPosY])
+                moves.append([i+1,currentPosY])
                 i += 1
             else:
-                legalMoves.append([i+1,currentPosY])
+                moves.append([i+1,currentPosY])
                 break
         i=currentPosX
         while (i > 0):
             if (board[i-1][currentPosY] == "."):
-                legalMoves.append([i-1,currentPosY])
+                moves.append([i-1,currentPosY])
                 i -= 1
             else:
-                legalMoves.append([i-1,currentPosY])
+                moves.append([i-1,currentPosY])
                 break
         #Move Along Y
         i=currentPosY
         while (i < 7):
             if (board[currentPosX][i+1] == "."):
-                legalMoves.append([currentPosX,i+1])
+                moves.append([currentPosX,i+1])
                 i += 1
             else:
-                legalMoves.append([currentPosX,i+1])
+                moves.append([currentPosX,i+1])
                 break
         i=currentPosY
         while (i > 0):
             if (board[currentPosX][i-1] == "."):
-                legalMoves.append([currentPosX,i-1])
+                moves.append([currentPosX,i-1])
                 i -= 1
             else:
-                legalMoves.append([currentPosX,i-1])
+                moves.append([currentPosX,i-1])
                 break
     elif (board[currentPosX][currentPosY][0]) in ('n', 'N'):
         print("knight")
         if ( currentPosX < 7 ):
             if ( currentPosY < 6 ):
-                legalMoves.append([currentPosX+1,currentPosY+2])
+                moves.append([currentPosX+1,currentPosY+2])
             if ( currentPosY > 1 ):
-                legalMoves.append([currentPosX+1,currentPosY-2])
+                moves.append([currentPosX+1,currentPosY-2])
         if ( currentPosX < 6 ):
             if ( currentPosY < 7 ):
-                legalMoves.append([currentPosX+2,currentPosY+1])
+                moves.append([currentPosX+2,currentPosY+1])
             if ( currentPosY > 0 ):
-                legalMoves.append([currentPosX+2,currentPosY-1])
+                moves.append([currentPosX+2,currentPosY-1])
         if ( currentPosX > 0):
             if ( currentPosY < 6 ):
-                legalMoves.append([currentPosX-1,currentPosY+2])
+                moves.append([currentPosX-1,currentPosY+2])
             if ( currentPosY > 1 ):
-                legalMoves.append([currentPosX-1,currentPosY-2])
+                moves.append([currentPosX-1,currentPosY-2])
         if ( currentPosX > 1 ):
             if ( currentPosY < 7 ):
-                legalMoves.append([currentPosX-2,currentPosY+1])
+                moves.append([currentPosX-2,currentPosY+1])
             if ( currentPosY > 0 ):
-                legalMoves.append([currentPosX-2,currentPosY-1])
+                moves.append([currentPosX-2,currentPosY-1])
     elif (board[currentPosX][currentPosY][0]) in ('b', 'B'):
         print("bishop")
         i=0
         while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
             if (board[currentPosX + i +1][currentPosY + i + 1] == "."):
-                legalMoves.append([currentPosX + i + 1,currentPosY + i + 1])
+                moves.append([currentPosX + i + 1,currentPosY + i + 1])
                 i += 1
             else:
-                legalMoves.append([currentPosX + i + 1,currentPosY + i + 1])
+                moves.append([currentPosX + i + 1,currentPosY + i + 1])
                 break
         i=0
         while (0 < currentPosX - i < 7 and 0 < currentPosY + i < 7):
             if (board[currentPosX - i - 1][currentPosY + i + 1] == "."):
-                legalMoves.append([currentPosX - i - 1,currentPosY + i + 1])
+                moves.append([currentPosX - i - 1,currentPosY + i + 1])
                 i += 1
             else:
-                legalMoves.append([currentPosX - i - 1,currentPosY + i + 1])
+                moves.append([currentPosX - i - 1,currentPosY + i + 1])
                 break
         i=0
         while (0 < currentPosX + i < 7 and 0 < currentPosY - i < 7):
             if (board[currentPosX + i + 1][currentPosY - i - 1] == "."):
-                legalMoves.append([currentPosX + i + 1,currentPosY - i - 1])
+                moves.append([currentPosX + i + 1,currentPosY - i - 1])
                 i += 1
             else:
-                legalMoves.append([currentPosX + i + 1,currentPosY - i - 1])
+                moves.append([currentPosX + i + 1,currentPosY - i - 1])
                 break
         i=0
         while (0 < currentPosX - i < 7 and 0 < currentPosY - i < 7):
             if (board[currentPosX - i - 1][currentPosY - i - 1] == "."):
-                legalMoves.append([currentPosX - i - 1,currentPosY - i - 1])
+                moves.append([currentPosX - i - 1,currentPosY - i - 1])
                 i += 1
             else:
-                legalMoves.append([currentPosX - i - 1,currentPosY - i - 1])
+                moves.append([currentPosX - i - 1,currentPosY - i - 1])
                 break
     elif (board[currentPosX][currentPosY][0]) in ('q', 'Q'):
         print("queen")
         i=0
         while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
             if (board[currentPosX + i +1][currentPosY + i + 1] == "."):
-                legalMoves.append([currentPosX + i + 1,currentPosY + i + 1])
+                moves.append([currentPosX + i + 1,currentPosY + i + 1])
                 i += 1
             else:
-                legalMoves.append([currentPosX + i + 1,currentPosY + i + 1])
+                moves.append([currentPosX + i + 1,currentPosY + i + 1])
                 break
         i=0
         while (0 < currentPosX - i < 7 and 0 < currentPosY + i < 7):
             if (board[currentPosX - i - 1][currentPosY + i + 1] == "."):
-                legalMoves.append([currentPosX - i - 1,currentPosY + i + 1])
+                moves.append([currentPosX - i - 1,currentPosY + i + 1])
                 i += 1
             else:
-                legalMoves.append([currentPosX - i - 1,currentPosY + i + 1])
+                moves.append([currentPosX - i - 1,currentPosY + i + 1])
                 break
         i=0
         while (0 < currentPosX + i < 7 and 0 < currentPosY - i < 7):
             if (board[currentPosX + i + 1][currentPosY - i - 1] == "."):
-                legalMoves.append([currentPosX + i + 1,currentPosY - i - 1])
+                moves.append([currentPosX + i + 1,currentPosY - i - 1])
                 i += 1
             else:
-                legalMoves.append([currentPosX + i + 1,currentPosY - i - 1])
+                moves.append([currentPosX + i + 1,currentPosY - i - 1])
                 break
         i=0
         while (0 < currentPosX - i < 7 and 0 < currentPosY - i < 7):
             if (board[currentPosX - i - 1][currentPosY - i - 1] == "."):
-                legalMoves.append([currentPosX - i - 1,currentPosY - i - 1])
+                moves.append([currentPosX - i - 1,currentPosY - i - 1])
                 i += 1
             else:
-                legalMoves.append([currentPosX - i - 1,currentPosY - i - 1])
+                moves.append([currentPosX - i - 1,currentPosY - i - 1])
                 break
         #Move Forward/Backward
         i=currentPosX
         while (i < 7):
             if (board[i+1][currentPosY] == "."):
-                legalMoves.append([i+1,currentPosY])
+                moves.append([i+1,currentPosY])
                 i += 1
             else:
-                legalMoves.append([i+1,currentPosY])
+                moves.append([i+1,currentPosY])
                 break
         i=currentPosX
         while (i > 0):
             if (board[i-1][currentPosY] == "."):
-                legalMoves.append([i-1,currentPosY])
+                moves.append([i-1,currentPosY])
                 i -= 1
             else:
-                legalMoves.append([i-1,currentPosY])
+                moves.append([i-1,currentPosY])
                 break
         #Move Left/Right
         i=currentPosY
         while (i < 7):
             if (board[currentPosX][i+1] == "."):
-                legalMoves.append([currentPosX,i+1])
+                moves.append([currentPosX,i+1])
                 i += 1
             else:
-                legalMoves.append([currentPosX,i+1])
+                moves.append([currentPosX,i+1])
                 break
         i=currentPosY
         while (i > 0):
             if (board[currentPosX][i-1] == "."):
-                legalMoves.append([currentPosX,i-1])
+                moves.append([currentPosX,i-1])
                 i -= 1
             else:
-                legalMoves.append([currentPosX,i-1])
+                moves.append([currentPosX,i-1])
                 break
     elif (board[currentPosX][currentPosY][0]) in ('k', 'K'):
         print("king")
-        legalMoves.append([currentPosX + 1,currentPosY + 1])
-        legalMoves.append([currentPosX ,currentPosY + 1])
-        legalMoves.append([currentPosX + 1,currentPosY])
-        legalMoves.append([currentPosX - 1,currentPosY + 1])
-        legalMoves.append([currentPosX + 1,currentPosY - 1])
-        legalMoves.append([currentPosX,currentPosY - 1])
-        legalMoves.append([currentPosX - 1,currentPosY])
-        legalMoves.append([currentPosX - 1,currentPosY - 1])
+        moves.append([currentPosX + 1,currentPosY + 1])
+        moves.append([currentPosX ,currentPosY + 1])
+        moves.append([currentPosX + 1,currentPosY])
+        moves.append([currentPosX - 1,currentPosY + 1])
+        moves.append([currentPosX + 1,currentPosY - 1])
+        moves.append([currentPosX,currentPosY - 1])
+        moves.append([currentPosX - 1,currentPosY])
+        moves.append([currentPosX - 1,currentPosY - 1])
         #Castling
+        if (board[currentPosX][currentPosY][1] == 0):
+            if(board[currentPosX][5][0] == '.' and board[currentPosX][6][0] == '.' and board[currentPosX][0][1] == 0): #add [curx,5] and [curX,6] cannot put king in check
+                moves.append([currentPosX,2])
+            if (board[currentPosX][3][0] == '.' and board[currentPosX][2][0] == '.' and board[currentPosX][7][1] == 0): #add [curx,3] and [curX,2] cannot put king in check
+                moves.append([currentPosX,6])
+    return(moves)
 
-    print(legalMoves)
+def friendlyFire(board, currentPosX, currentPosY, possibleMoves):
+    moves = []
+    for n in possibleMoves:
+        if (board[n[0]][n[1]][0] == '.' or board[currentPosX][currentPosY][0].isupper() != board[n[0]][n[1]][0].isupper()):
+            moves.append(n)
+    return (moves)
+
+# Function: MoveValidation
+# Description: Checks for Legal Move (Follows Piece Movement, Does Not Attack Own Piece)
+# Arguements: board, currentPosX, currentPosY, newPositionX, newPositionY
+# Return: True/False
+def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY):
+    #Find Possible Moves/Attacks
+    possibleMoves = findmoves(board, currentPosX, currentPosY)
+
+    #Remove Attacks Against Own Pieces
+    legalMoves = friendlyFire(board, currentPosX, currentPosY, possibleMoves)
+
+    #Checks if New Position is Valid
+    for n in legalMoves:
+        if (newPositionX == n[0] and newPositionY == n[1]):
+            return(1) #Move Accepted
+
+    return(0) #Move Illegal
 
 # Function: MakeMove
 # Description: Moves the Piece(s) From One Location on the Board to Another
@@ -238,7 +256,7 @@ def sendBoard (board):
 #############################################################################
 #Test Code
 x=0
-y=0
-moveValidation(board1, x,y,1,1)
+y=1
+print(moveValidation(board1, x,y,2,3))
 
 #print(board[x][y])

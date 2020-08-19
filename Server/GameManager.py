@@ -211,6 +211,13 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
         legalMoves.append([currentPosX - 1,currentPosY])
         legalMoves.append([currentPosX - 1,currentPosY - 1])
     print(legalMoves)
+
+def makeMove (board, currentPosX, currentPosY, newPositionX,  newPositionY):
+    print("Move Made")
+
+def sendBoard (board):
+    print("Board Sent to Client")
+
 # General
     # If new position is occupied by own Piece
         #illegal

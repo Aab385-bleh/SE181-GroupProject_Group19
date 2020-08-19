@@ -3,28 +3,30 @@
 board1 = []
 
 #STANDARD BOARD
-#board.append(['r','n','b','q','k','b','n','r'])
-#board.append(['p','p','p','p','p','p','p','p'])
-#for n in range(4):
-#    board.append(["."] *8)
-#board.append(['P','P','P','P','P','P','P','P'])
-#board.append(['R','N','B','Q','K','B','N','R'])
+#Square Structure -> [<piece>,<Moved Yet>]
+board1.append([["r",0],["n",0],["b",0],["q",0],["k",0],["b",0],["n",0],["r",0]])
+board1.append([["p",0],["p",0],["p",0],["p",0],["p",0],["p",0],["p",0],["p",0]])
+for n in range(4):
+   board1.append([[".",0] *8])
+board1.append([["P",0],["P",0],["P",0],["P",0],["P",0],["P",0],["P",0],["P",0]])
+board1.append([["R",0],["N",0],["B",0],["Q",0],["K",0],["B",0],["N",0],["R",0]])
 
 #NOT STANDARD BOARD
-board1.append(['p','.','.','.','.','.','.','.'])
-board1.append(['.','.','.','.','.','.','.','.'])
-board1.append(['.','.','.','.','k','.','.','.'])
-board1.append(['.','.','.','.','.','p','.','.'])
-board1.append(['.','.','.','r','k','.','r','.'])
-board1.append(['.','.','.','.','k','.','.','.'])
-board1.append(['.','.','p','.','.','.','p','.'])
-board1.append(['.','.','.','.','.','.','.','.'])
+
+#board1.append([[".",0],[".",0],[".",0],[".",0],[".",0],[".",0],[".",0],[".",0]])
+#board1.append(['.','.','.','.','.','.','.','.'])
+#board1.append(['.','.','.','.','k','.','.','.'])
+#board1.append(['.','.','.','.','.','p','.','.'])
+#board1.append(['.','.','.','r','k','.','r','.'])
+#board1.append(['.','.','.','.','k','.','.','.'])
+#board1.append(['.','.','p','.','.','.','p','.'])
+#board1.append(['.','.','.','.','.','.','.','.'])
 
 
 def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY):
     legalMoves=[]
 
-    if (board[currentPosX][currentPosY]) in ('p'):
+    if (board[currentPosX][currentPosY][0]) in ('p'):
         legalMoves.append([currentPosX+1,currentPosY])
         if (currentPosX == 1):   #If in Starting Position
             legalMoves.append([currentPosX+2,currentPosY])
@@ -32,7 +34,7 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
             legalMoves.append([currentPosX+1,currentPosY+1])
         if (currentPosY > 0 and board[currentPosX+1][currentPosY-1] != "."): #If attacking to Right
             legalMoves.append([currentPosX+1,currentPosY-1])
-    elif (board[currentPosX][currentPosY]) in ('P'):
+    elif (board[currentPosX][currentPosY][0]) in ('P'):
         legalMoves.append([currentPosX-1,currentPosY])
         if (currentPosX == 6):   #If in Starting Position
             legalMoves.append([currentPosX-2,currentPosY])
@@ -40,7 +42,7 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
             legalMoves.append([currentPosX-1,currentPosY+1])
         if (currentPosY > 0 and board[currentPosX-1][currentPosY-1] != "."): #If attacking to left
             legalMoves.append([currentPosX-1,currentPosY-1])
-    elif (board[currentPosX][currentPosY]) in ('r', 'R'):
+    elif (board[currentPosX][currentPosY][0]) in ('r', 'R'):
         print("rook")
         #Move Along X
         i=currentPosX
@@ -76,7 +78,7 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
             else:
                 legalMoves.append([currentPosX,i-1])
                 break
-    elif (board[currentPosX][currentPosY]) in ('n', 'N'):
+    elif (board[currentPosX][currentPosY][0]) in ('n', 'N'):
         print("knight")
         if ( currentPosX < 7 ):
             if ( currentPosY < 6 ):
@@ -98,7 +100,7 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
                 legalMoves.append([currentPosX-2,currentPosY+1])
             if ( currentPosY > 0 ):
                 legalMoves.append([currentPosX-2,currentPosY-1])
-    elif (board[currentPosX][currentPosY]) in ('b', 'B'):
+    elif (board[currentPosX][currentPosY][0]) in ('b', 'B'):
         print("bishop")
         i=0
         while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
@@ -132,7 +134,7 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
             else:
                 legalMoves.append([currentPosX - i - 1,currentPosY - i - 1])
                 break
-    elif (board[currentPosX][currentPosY]) in ('q', 'Q'):
+    elif (board[currentPosX][currentPosY][0]) in ('q', 'Q'):
         print("queen")
         i=0
         while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
@@ -200,7 +202,7 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
             else:
                 legalMoves.append([currentPosX,i-1])
                 break
-    if (board[currentPosX][currentPosY]) in ('k', 'K'):
+    elif (board[currentPosX][currentPosY][0]) in ('k', 'K'):
         print("king")
         legalMoves.append([currentPosX + 1,currentPosY + 1])
         legalMoves.append([currentPosX ,currentPosY + 1])
@@ -214,6 +216,8 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
 
 def makeMove (board, currentPosX, currentPosY, newPositionX,  newPositionY):
     print("Move Made")
+    #Update board
+    #Update Piece Move Yet
 
 def sendBoard (board):
     print("Board Sent to Client")
@@ -250,8 +254,8 @@ def sendBoard (board):
         # Queen
         # King
 #############################################################################
-x=4
-y=4
+x=0
+y=0
 moveValidation(board1, x,y,1,1)
 
 #print(board[x][y])

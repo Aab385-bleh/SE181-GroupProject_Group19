@@ -22,13 +22,16 @@ board1.append([["R",0],["N",0],["B",0],["Q",0],["K",0],["B",0],["N",0],["R",0]])
 #board1.append(['.','.','p','.','.','.','p','.'])
 #board1.append(['.','.','.','.','.','.','.','.'])
 
-
+# Function: MoveValidation
+# Description: Checks for Legal Move (Follows Piece Movement, Does Not Attack Own Piece)
+# Arguements:
+# Return: True/False
 def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY):
     legalMoves=[]
 
     if (board[currentPosX][currentPosY][0]) in ('p'):
         legalMoves.append([currentPosX+1,currentPosY])
-        if (currentPosX == 1):   #If in Starting Position
+        if (board[currentPosX][currentPosY][1] == 0):   #If in Starting Position
             legalMoves.append([currentPosX+2,currentPosY])
         if (currentPosY < 7 and board[currentPosX+1][currentPosY+1] != "."): #If attacking to left
             legalMoves.append([currentPosX+1,currentPosY+1])
@@ -36,7 +39,7 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
             legalMoves.append([currentPosX+1,currentPosY-1])
     elif (board[currentPosX][currentPosY][0]) in ('P'):
         legalMoves.append([currentPosX-1,currentPosY])
-        if (currentPosX == 6):   #If in Starting Position
+        if (board[currentPosX][currentPosY][1] = 0):   #If in Starting Position
             legalMoves.append([currentPosX-2,currentPosY])
         if (currentPosY < 7 and board[currentPosX-1][currentPosY+1] != "."): #If attacking to Right
             legalMoves.append([currentPosX-1,currentPosY+1])
@@ -212,48 +215,28 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
         legalMoves.append([currentPosX,currentPosY - 1])
         legalMoves.append([currentPosX - 1,currentPosY])
         legalMoves.append([currentPosX - 1,currentPosY - 1])
+        #Castling
+
     print(legalMoves)
 
+# Function: MakeMove
+# Description: Moves the Piece(s) From One Location on the Board to Another
+# Arguements:
+# Return: Updated Board
 def makeMove (board, currentPosX, currentPosY, newPositionX,  newPositionY):
     print("Move Made")
     #Update board
     #Update Piece Move Yet
 
+# Function: SendBoard
+# Description: Send Board to Client
+# Arguements:
+# Return: Error Code
 def sendBoard (board):
     print("Board Sent to Client")
 
-# General
-    # If new position is occupied by own Piece
-        #illegal
-    # Else
-        # Pawn
-            # If blocked?
-                # Illegal
-            # Else
-                # If starting position:
-                    # If attacking:
-                        # [x+1][y+1] or [x-1][y+1]
-                    # Else:
-                        # [x][y+1] or [x][y+2]
-                # Else
-                    # If attacking
-                        # If En Passant
-                            # [x+1][y] or [x-1][y]
-                        # Else
-                            # [x+1][y+1]
-                    # Else
-                        # [x][y+1]
-
-        # Rook
-            #[x+n][y] or [x-n][y] or [x][y+n][]
-
-        # Knight
-            # [x+2][y+1] or [x+2][y-1] or [x-2][y+1] or [x-2][y-1] or [x+1][y+2] or [x-1][y+2] or [x+1][y-2] or [x-1][y-2]
-
-        # Bishop
-        # Queen
-        # King
 #############################################################################
+#Test Code
 x=0
 y=0
 moveValidation(board1, x,y,1,1)

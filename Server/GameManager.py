@@ -243,6 +243,7 @@ def findAttacks(board, currentPosX, currentPosY):
         #Move Along X
         i=currentPosX
         while (i < 7):
+            print(i)
             if (board[i+1][currentPosY][0] == "."):
                 attacks.append([i+1,currentPosY])
                 i += 1
@@ -433,6 +434,13 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
     legalMoves = friendlyFire(board, currentPosX, currentPosY, possibleMoves)
 
     #Remove Spots that would put in check
+    testCheckboard = makeMove(board, currentPosX, currentPosY, newPositionX, newPositionY)
+    if (board[currentPosX][currentPosY][0].isupper()):
+        if (isCheck(testCheckboard, 'w')):
+            return(False)
+    else:
+        if (isCheck(testCheckboard, 'b')):
+            return(False)
 
     #Checks if New Position is Valid
     for n in legalMoves:
@@ -523,8 +531,8 @@ def sendBoard (board):
 #############################################################################
 #Test Code
 gameboard = startGame();
-makeMove(gameboard,1,0,3,0)
-print(makeMove(gameboard,6,2,4,2))
+#isCheck(gameboard,"b")
+print(moveValidation(gameboard, 0, 0, 0, 1))
 x=0
 y=1
 #print(findMoves(gameboard,7,0))

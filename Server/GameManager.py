@@ -446,9 +446,10 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
 # Arguements:
 # Return: updateBoard
 def makeMove (board, currentPosX, currentPosY, newPositionX,  newPositionY):
-    print("Move Made")
-    #Update board
-    #Update Piece Move Yet element
+    updateBoard = board
+    tmpPiece = board[currentPosX][currentPosY][0]
+    updateBoard[currentPosX][currentPosY] = ['.',2]
+    updateBoard[newPositionX][newPositionY] = [tmpPiece, 1]
     return(updateBoard)
 
 # Function: IsCheck
@@ -522,7 +523,8 @@ def sendBoard (board):
 #############################################################################
 #Test Code
 gameboard = startGame();
-print(isCheck(gameboard,'b'))
+makeMove(gameboard,1,0,3,0)
+print(makeMove(gameboard,6,2,4,2))
 x=0
 y=1
 #print(findMoves(gameboard,7,0))

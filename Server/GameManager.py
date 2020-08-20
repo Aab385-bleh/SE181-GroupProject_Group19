@@ -364,7 +364,7 @@ def findAttacks(board, currentPosX, currentPosY):
                 attacks.append([currentPosX + i + 1,currentPosY - i - 1])
                 i += 1
             else:
-                moves.append([currentPosX + i + 1,currentPosY - i - 1])
+                attacks.append([currentPosX + i + 1,currentPosY - i - 1])
                 break
         i=0
         while (0 < currentPosX - i < 7 and 0 < currentPosY - i < 7):
@@ -542,8 +542,31 @@ def isCheckMate(board, player):
                 testBoard = copy.deepcopy(currentBoard)
             else:
                 return(False) #Is not in Checkmate
-        return(True) #Is in Checkmate
-
+        # Can Other Piece move out of Check?
+        row=0
+        col=0
+        possibleMoves = []
+        allies=[]
+        while row < 8 and col < 8:
+            if (board[row][col][0] in ['R','N','B','Q','P']):
+                allies.append([row, col]) #Get location of Piece
+                possibleMoves.append((findMoves(board, row, col ))) #Get Moves for that Piece
+            col+=1
+            if col == 8 and row < 8:
+                row+=1
+                col=0
+        testBoard = copy.deepcopy(currentBoard)
+        i = 0
+        while i < len(allies):
+            for m in possibleMoves[i]:
+                print(m)
+                testMove = makeMove(testBoard, allies[i][0], allies[i][1], m[0], m[1])
+                if (isCheck(testMove, player)):
+                    testBoard = copy.deepcopy(currentBoard)
+                else:
+                    return(False) #Is not in Checkmate
+         #Is in Checkmate
+        return(True)
 
 # Function: PawnPromotion
 # Description: Promote Pawn When Reaching Other Side Of Board

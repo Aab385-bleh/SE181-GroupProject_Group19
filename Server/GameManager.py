@@ -4,6 +4,8 @@
 # Updated: 8/20/2020
 # SE181 - Group 19
 
+import copy
+
 # Function: StartGame
 # Description: Initializes Chess Board with starting positions
 # Arguements:
@@ -13,11 +15,11 @@ def startGame():
     #STANDARD BOARD
     #Square Structure -> [<piece>,<Moved Yet>] (0- not moved, 1- moved, 2- no piece)
     startingBoard.append([["r",0],["n",0],["b",0],["q",0],["k",0],["b",0],["n",0],["r",0]])
-    startingBoard.append([["p",0],["p",0],["p",0],["p",0],[".",0],["p",0],["p",0],["p",0]])
+    startingBoard.append([["p",0],["p",0],["p",0],["p",0],["p",0],["p",0],["p",0],["p",0]])
     for n in range(4):
        startingBoard.append([[".",2],[".",2],[".",2],[".",2],[".",2],[".",2],[".",2],[".",2]])
-    startingBoard.append([["P",0],["P",0],["P",0],["P",0],[".",0],["P",0],["P",0],["P",0]])
-    startingBoard.append([["R",0],["N",0],["B",0],["Q",0],["R",0],["B",0],["N",0],["R",0]])
+    startingBoard.append([["P",0],["P",0],["P",0],["P",0],["P",0],["P",0],["P",0],["P",0]])
+    startingBoard.append([["R",0],["N",0],["B",0],["Q",0],["K",0],["B",0],["N",0],["R",0]])
     return(startingBoard)
 
 # Function: FindMoves
@@ -205,14 +207,22 @@ def findMoves(board, currentPosX, currentPosY):
                 break
     elif (board[currentPosX][currentPosY][0]) in ('k', 'K'):
         print("king")
-        moves.append([currentPosX + 1,currentPosY + 1])
-        moves.append([currentPosX ,currentPosY + 1])
-        moves.append([currentPosX + 1,currentPosY])
-        moves.append([currentPosX - 1,currentPosY + 1])
-        moves.append([currentPosX + 1,currentPosY - 1])
-        moves.append([currentPosX,currentPosY - 1])
-        moves.append([currentPosX - 1,currentPosY])
-        moves.append([currentPosX - 1,currentPosY - 1])
+        if (currentPosX > 0):
+            moves.append([currentPosX - 1,currentPosY])
+            if (currentPosY > 0):
+                moves.append([currentPosX - 1,currentPosY - 1])
+            if (currentPosY < 7):
+                moves.append([currentPosX - 1,currentPosY + 1])
+        if (currentPosX < 7):
+            moves.append([currentPosX + 1,currentPosY])
+            if (currentPosY > 0):
+                moves.append([currentPosX + 1,currentPosY - 1])
+            if (currentPosY < 7):
+                moves.append([currentPosX + 1,currentPosY + 1])
+        if (currentPosY > 0):
+            moves.append([currentPosX,currentPosY - 1])
+        if (currentPosY < 7):
+            moves.append([currentPosX ,currentPosY + 1])
         #Castling
         if (board[currentPosX][currentPosY][1] == 0):
             if(board[currentPosX][5][0] == '.' and board[currentPosX][6][0] == '.' and board[currentPosX][0][1] == 0): #add [curx,5] and [curX,6] cannot put king in check
@@ -243,7 +253,6 @@ def findAttacks(board, currentPosX, currentPosY):
         #Move Along X
         i=currentPosX
         while (i < 7):
-            print(i)
             if (board[i+1][currentPosY][0] == "."):
                 attacks.append([i+1,currentPosY])
                 i += 1
@@ -401,14 +410,22 @@ def findAttacks(board, currentPosX, currentPosY):
                 break
     elif (board[currentPosX][currentPosY][0]) in ('k', 'K'):
         print("king")
-        attacks.append([currentPosX + 1,currentPosY + 1])
-        attacks.append([currentPosX ,currentPosY + 1])
-        attacks.append([currentPosX + 1,currentPosY])
-        attacks.append([currentPosX - 1,currentPosY + 1])
-        attacks.append([currentPosX + 1,currentPosY - 1])
-        attacks.append([currentPosX,currentPosY - 1])
-        attacks.append([currentPosX - 1,currentPosY])
-        attacks.append([currentPosX - 1,currentPosY - 1])
+        if (currentPosX > 0):
+            attacks.append([currentPosX - 1,currentPosY])
+            if (currentPosY > 0):
+                attacks.append([currentPosX - 1,currentPosY - 1])
+            if (currentPosY < 7):
+                attacks.append([currentPosX - 1,currentPosY + 1])
+        if (currentPosX < 7):
+            attacks.append([currentPosX + 1,currentPosY])
+            if (currentPosY > 0):
+                attacks.append([currentPosX + 1,currentPosY - 1])
+            if (currentPosY < 7):
+                attacks.append([currentPosX + 1,currentPosY + 1])
+        if (currentPosY > 0):
+            attacks.append([currentPosX,currentPosY - 1])
+        if (currentPosY < 7):
+            attacks.append([currentPosX ,currentPosY + 1])
     return(attacks)
 
 # Function: FriendlyFire
@@ -454,8 +471,8 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
 # Arguements:
 # Return: updateBoard
 def makeMove (board, currentPosX, currentPosY, newPositionX,  newPositionY):
-    updateBoard = board
-    tmpPiece = board[currentPosX][currentPosY][0]
+    updateBoard = list(board)
+    tmpPiece = updateBoard[currentPosX][currentPosY][0]
     updateBoard[currentPosX][currentPosY] = ['.',2]
     updateBoard[newPositionX][newPositionY] = [tmpPiece, 1]
     return(updateBoard)
@@ -498,12 +515,35 @@ def isCheck(board, player):
         return(False) #Is not in Check
 
 # Function: IsCheckMate
-# Description: Determine if a player is in Checkmate
+# Description: Determine if a player is in Checkmate given a board that has a player in check
 # Arguements: board, player
 # Return: True/False
 def isCheckMate(board, player):
-    return(True) #Is in Checkmate
-    return(False) #Is not in Checkmate
+    possibleMoves = []
+    currentBoard = copy.deepcopy(board)
+    if (player == 'w'):
+        # Can King move out of Check?
+        row=0
+        col=0
+        while row < 8 and col < 8:
+            if (board[row][col][0] in ['K']):
+                possibleMoves = (findMoves(board, row, col ))
+                break
+            else:
+                col+=1
+            if col == 8 and row < 8:
+                row+=1
+                col=0
+        legalMoves = friendlyFire(board, row, col, possibleMoves)
+        testBoard = copy.deepcopy(currentBoard)
+        for m in legalMoves:
+            testMove = makeMove(testBoard, row, col, m[0], m[1])
+            if (isCheck(testMove, player)):
+                testBoard = copy.deepcopy(currentBoard)
+            else:
+                return(False) #Is not in Checkmate
+        return(True) #Is in Checkmate
+
 
 # Function: PawnPromotion
 # Description: Promote Pawn When Reaching Other Side Of Board
@@ -532,7 +572,7 @@ def sendBoard (board):
 #Test Code
 gameboard = startGame();
 #isCheck(gameboard,"b")
-print(moveValidation(gameboard, 0, 0, 0, 1))
+print(isCheckMate(gameboard, "w"))
 x=0
 y=1
 #print(findMoves(gameboard,7,0))

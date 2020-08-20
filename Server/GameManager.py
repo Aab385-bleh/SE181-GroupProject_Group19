@@ -1,15 +1,19 @@
-# Initialize Chess Board
-# Initialize Pieces
-board1 = []
 
-#STANDARD BOARD
-#Square Structure -> [<piece>,<Moved Yet>] (0- not moved, 1- moved, 2- no piece)
-board1.append([["r",0],["n",0],["b",0],["q",0],["k",0],["b",0],["n",0],["r",0]])
-board1.append([["p",0],["p",0],["p",0],["p",0],["p",0],["p",0],["p",0],["p",0]])
-for n in range(4):
-   board1.append([[".",0],[".",0],[".",0],[".",0],[".",0],[".",0],[".",0],[".",0]])
-board1.append([["P",0],["P",0],["P",0],["P",0],["P",0],["P",0],["P",0],["P",0]])
-board1.append([["R",0],["N",0],["B",0],["Q",0],["K",0],["B",0],["N",0],["R",0]])
+# Function: StartGame
+# Description: Initializes Chess Board with starting positions
+# Arguements:
+# Return: moves[]
+def startGame():
+    startingBoard=[];
+    #STANDARD BOARD
+    #Square Structure -> [<piece>,<Moved Yet>] (0- not moved, 1- moved, 2- no piece)
+    startingBoard.append([["r",0],["n",0],["b",0],["q",0],["k",0],["b",0],["n",0],["r",0]])
+    startingBoard.append([["p",0],["p",0],["p",0],["p",0],["p",0],["p",0],["p",0],["p",0]])
+    for n in range(4):
+       startingBoard.append([[".",0],[".",0],[".",0],[".",0],[".",0],[".",0],[".",0],[".",0]])
+    startingBoard.append([["P",0],["P",0],["P",0],["P",0],["P",0],["P",0],["P",0],["P",0]])
+    startingBoard.append([["R",0],["N",0],["B",0],["Q",0],["K",0],["B",0],["N",0],["R",0]])
+    return(startingBoard)
 
 # Function: Findmoves
 # Description: Determines all the legal moves that can be made for a given piece (Follows Piece Movement, Does Not Attack Own Piece)
@@ -212,6 +216,10 @@ def findmoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX,6])
     return(moves)
 
+# Function: FriendlyFire
+# Description: Determines if an attack is being made against a player's own piece
+# Arguements: board, currentPosX, currentPosY, possibleMoves
+# Return: moves[]
 def friendlyFire(board, currentPosX, currentPosY, possibleMoves):
     moves = []
     for n in possibleMoves:
@@ -233,30 +241,59 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
     #Checks if New Position is Valid
     for n in legalMoves:
         if (newPositionX == n[0] and newPositionY == n[1]):
-            return(1) #Move Accepted
-
-    return(0) #Move Illegal
+            return(True) #Move Accepted
+    #Move Illegal
+    return(False)
 
 # Function: MakeMove
 # Description: Moves the Piece(s) From One Location on the Board to Another
 # Arguements:
-# Return: Updated Board
+# Return: updateBoard
 def makeMove (board, currentPosX, currentPosY, newPositionX,  newPositionY):
     print("Move Made")
     #Update board
-    #Update Piece Move Yet
+    #Update Piece Move Yet element
+    return(updateBoard)
+
+# Function: IsCheck
+# Description: Determine if a player is in Check
+# Arguements: board
+# Return: True/False
+def isCheck(board):
+    return(True) #Is in Check
+    return(False) #Is not in Check
+
+# Function: PawnPromotion
+# Description: Promote Pawn When Reaching Other Side Of Board
+# Arguements: board, pawnPosX, pawnPosY, newPiece
+# Return: updateBoard
+def pawnPromotion(board, pawnPosX, pawnPosY, newPiece):
+    updateBoard = board
+    updateBoard[pawnPosX][pawnPosY] = [newPiece,1]
+    return(updateBoard)
 
 # Function: SendBoard
 # Description: Send Board to Client
 # Arguements:
 # Return: Error Code
 def sendBoard (board):
-    print("Board Sent to Client")
+    if ('P' in board[1] or 'p' in board[7]):
+        print("Pawn Promotion Sent")
+        #Send Board and wait for response
+        #Swap Pawn
+        gameboard=pawnPromotion(gameboard,pawnPosX,pawnPosY,newPiece)
+        #Send new Board
+    else:
+        print("Board Sent to Client")
 
 #############################################################################
 #Test Code
+gameboard = startGame();
+print(gameboard)
+gameboard=pawnPromotion(gameboard,1,0,'B')
+print(gameboard)
 x=0
 y=1
-print(moveValidation(board1, x,y,2,3))
 
-#print(board[x][y])
+
+#moveValidation(gameboard, x,y,2,3)

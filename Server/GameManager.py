@@ -1,3 +1,8 @@
+# Filename: GameManager.py
+# Description: Back-End to Chess Game Term Project
+# Created: 8/17/2020
+# Updated: 8/20/2020
+# SE181 - Group 19
 
 # Function: StartGame
 # Description: Initializes Chess Board with starting positions
@@ -9,7 +14,7 @@ def startGame():
     #Square Structure -> [<piece>,<Moved Yet>] (0- not moved, 1- moved, 2- no piece)
     startingBoard.append([["r",0],["n",0],["b",0],["q",0],["k",0],["b",0],["n",0],["r",0]])
     startingBoard.append([["p",0],["p",0],["p",0],["p",0],[".",0],["p",0],["p",0],["p",0]])
-    for n in range(6):
+    for n in range(4):
        startingBoard.append([[".",2],[".",2],[".",2],[".",2],[".",2],[".",2],[".",2],[".",2]])
     startingBoard.append([["P",0],["P",0],["P",0],["P",0],[".",0],["P",0],["P",0],["P",0]])
     startingBoard.append([["R",0],["N",0],["B",0],["Q",0],["R",0],["B",0],["N",0],["R",0]])

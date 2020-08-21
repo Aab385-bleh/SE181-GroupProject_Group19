@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { User } from '../classes/User';
 
 @Component({
   selector: 'app-chessboard',
@@ -15,6 +16,8 @@ export class ChessboardComponent implements OnInit {
   whitePieces: string[] = ["k", "q", "r", "b", "n", "p"];
   blackPieces: string[] = ["K", "Q", "R", "B", "N", "P"];
   message: string;
+  player1: User = new User("name1");
+  player2: User = new User("name2");
 
   constructor() { }
 
@@ -99,7 +102,7 @@ export class ChessboardComponent implements OnInit {
         this.isPieceChosen = true;
         sq.isSelected = true;
         this.pieceChosen = sq;
-        alert("Moving piece has been chosen.");
+        // alert("Moving piece has been chosen.");
       } else {
         alert("Choose a square that's occupied.");
       }
@@ -121,7 +124,7 @@ export class ChessboardComponent implements OnInit {
           sq.isSelected = true;
           this.isLocationChosen = true;
           this.locationChosen = sq;
-          alert("move... 2");
+          // alert("move... 2");
           var newMove: Move = new Move(this.pieceChosen, this.locationChosen);
           this.attemptMove(newMove);
           // deselecting
@@ -136,7 +139,7 @@ export class ChessboardComponent implements OnInit {
         sq.isSelected = true;
         this.isLocationChosen = true;
         this.locationChosen = sq;
-        alert("move .. 3");
+        // alert("move .. 3");
         var newMove: Move = new Move(this.pieceChosen, this.locationChosen);
         this.attemptMove(newMove);
         // deselecting
@@ -151,7 +154,7 @@ export class ChessboardComponent implements OnInit {
   }
 
   attemptMove(move: Move) {
-    alert("Attempting move...");
+    // alert("Attempting move...");
 
     var isMoveValid: boolean = this.validateMove(move); // validate
 
@@ -168,7 +171,7 @@ export class ChessboardComponent implements OnInit {
   }
 
   validateMove(move: Move) {
-    alert("Validating move...");
+    // alert("Validating move...");
     // call python back end here ****************************
     // send Move object to back end *******************
     alert("Move is valid");

@@ -24,6 +24,54 @@ export class ChessboardComponent implements OnInit {
     this.ChessBoard.createStartBoard();
   }
 
+  getIcon(piece: string) {
+    var icon: string = null;
+    switch(piece) { 
+      case "k": { 
+         icon = "assets/Chess_klt45.svg";
+         break; 
+      } case "K": { 
+        icon = "assets/Chess_kdt45.svg";
+         break; 
+      } case "q": { 
+        icon = "assets/Chess_qlt45.svg";
+         break; 
+      } case "Q": { 
+        icon = "assets/Chess_qdt45.svg";
+         break; 
+      } case "r": { 
+        icon = "assets/Chess_rlt45.svg";
+         break; 
+      } case "R": { 
+        icon = "assets/Chess_rdt45.svg";
+         break; 
+      } case "b": { 
+        icon = "assets/Chess_blt45.svg";
+         break; 
+      } case "B": { 
+        icon = "assets/Chess_bdt45.svg";
+         break; 
+      } case "n": { 
+        icon = "assets/Chess_nlt45.svg";
+         break; 
+      } case "N": { 
+        icon = "assets/Chess_ndt45.svg";
+         break; 
+      } case "p": { 
+        icon = "assets/Chess_plt45.svg";
+         break; 
+      } case "P": { 
+        icon = "assets/Chess_pdt45.svg";
+         break; 
+      }
+      default: { 
+        icon = "assets/BLANK_ICON.png";
+         break; 
+      } 
+   }
+   return icon;
+  }
+
   /* TESTING ONLY */
   testBoard: string[][] = [
     ['.', 'n', 'b', 'q', 'k', '.', 'n', 'r'],

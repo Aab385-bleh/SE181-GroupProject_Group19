@@ -1,0 +1,15 @@
+.grid {
+    display: grid;
+    grid-template-columns: repeat(8, lfr);
+}
+.grid > div > span {
+    padding: 6px 6px;
+    font-family: monospace;
+}
+.tbbbb {
+    padding: 6px 6px;
+    font-family: monospace;
+}
+.selected {
+    border: 1px solid red;
+}

@@ -10,6 +10,9 @@ import { ChessboardComponent } from './chessboard/chessboard.component';
     AppComponent,
     ChessboardComponent
   ],
+  entryComponents : [
+    ChessboardComponent
+  ],
   imports: [
     BrowserModule,
     AppRoutingModule

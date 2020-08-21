@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { User } from '../classes/User';
+import { WebSocketService } from '../services/web-socket.service';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-chessboard',
@@ -7,7 +9,6 @@ import { User } from '../classes/User';
   styleUrls: ['./chessboard.component.css']
 })
 export class ChessboardComponent implements OnInit {
-
   ChessBoard: Board = new Board();
   asdf: Square = new Square();
   // Rows: string[] = ["1", "2", "3", "4", "5", "6", "7", "8"];
@@ -16,10 +17,13 @@ export class ChessboardComponent implements OnInit {
   whitePieces: string[] = ["k", "q", "r", "b", "n", "p"];
   blackPieces: string[] = ["K", "Q", "R", "B", "N", "P"];
   message: string;
-  player1: User = new User("name1");
-  player2: User = new User("name2");
+  localUser: User; /*get name from gameroom which should emit
+  something telling the user whether they are the first or second user*/
+  otherUser: User; //have them get this from gameroom
+  private menuRoom = "gameRoom" // Hardcoded GameRoom Name, change if neccesary
 
-  constructor() { }
+  constructor(public webSocketService: WebSocketService,
+    public dialog: MatDialog) { }
 
   ngOnInit(): void { }
 

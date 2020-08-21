@@ -33,7 +33,6 @@ export class MainMenuComponent implements OnInit {
       err => console.error('Observer for InviteReception got an error: ' + err), 
       () => console.log('Observer for InviteReception got a complete notification'));
     
-    
     this.webSocketService.getGameInviteResponsesObservable().subscribe(response => {
         if (response) {
           /*TODO: In case of invite not being accepted, make popup for User to let them know that their
@@ -104,5 +103,5 @@ export class MainMenuComponent implements OnInit {
   }
 
   //
-  reactToInviteResponse()
+ // reactToInviteResponse()
 }

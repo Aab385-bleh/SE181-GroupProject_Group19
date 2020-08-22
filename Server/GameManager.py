@@ -577,17 +577,20 @@ def pawnPromotion(board, pawnPosX, pawnPosY, newPiece):
     return(updateBoard)
 
 # Function: simpleBoard
-# Description: Given Board[row][column][square] simplify to Board[row][column]
+# Description: Given Board[row][column][square] simplify to Board[row][column] and print
 # Arguements: board
 # Return: simpleBoard
-def simpleBoard(board):
+def simpleBoard(board,player):
     simpleB = []
     r = 0
     c = 0
     while r < 8:
         simpleR=[]
         while c < 8:
-            simpleR.append(board[r][c][0])
+            if player == 'w':
+                simpleR.append(board[r][c][0])
+            elif player == 'b':
+                simpleR.append(board[7-r][c][0])
             c+=1
         c=0
         r+=1
@@ -609,7 +612,7 @@ def gameManager():
 
     while winner == 'none':
         vMove = False;
-        simpleBoard(gameboard)#Print Board
+        simpleBoard(gameboard,playerTurn)#Print Board
         if playerTurn == 'w':
             print("Turn: White")
         if playerTurn == 'b':

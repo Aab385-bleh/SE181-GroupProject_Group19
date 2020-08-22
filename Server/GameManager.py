@@ -630,12 +630,14 @@ def gameManager():
                 print("Invalid Move!")
 
         #Check if Pawn Promotion
-        if (['P',1] in gameboard[1] ):
-            newPiece = input('Pawn Promotion! Choose Your Piece (R,N,B,Q):')
-            gameboard=pawnPromotion(gameboard,pawnPosX,pawnPosY,newPiece)
-        if (['p',1] in gameboard[7]):
-            newPiece = input('Pawn Promotion! Choose Your Piece (r,n,b,q):')
-            gameboard=pawnPromotion(gameboard,pawnPosX,pawnPosY,newPiece)
+        for c in range(8):
+            if ( gameboard[0][c] == ['P',1]):
+                newPiece = input('Pawn Promotion! Choose Your Piece (R,N,B,Q):')
+                gameboard=pawnPromotion(gameboard,0,c,newPiece)
+        for c in range(8):
+            if (gameboard[7][c] == ['p',1] ):
+                newPiece = input('Pawn Promotion! Choose Your Piece (r,n,b,q):')
+                gameboard=pawnPromotion(gameboard,7,c,newPiece)
 
         #Check for Check/CheckMate
         if playerTurn == 'w':

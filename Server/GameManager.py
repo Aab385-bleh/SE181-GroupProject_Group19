@@ -1,9 +1,9 @@
 # Filename: GameManager.py
 # Description: Back-End to Chess Game Term Project
 # Created: 8/17/2020
-# Updated: 8/20/2020
+# Updated: 8/21/2020
 # SE181 - Group 19
-
+import socket
 import copy
 
 # Function: StartGame
@@ -46,7 +46,6 @@ def findMoves(board, currentPosX, currentPosY):
         if (currentPosY > 0 and board[currentPosX-1][currentPosY-1][0] != "."): #If attacking to left
             moves.append([currentPosX-1,currentPosY-1])
     elif (board[currentPosX][currentPosY][0]) in ('r', 'R'):
-        print("rook")
         #Move Along X
         i=currentPosX
         while (i < 7):
@@ -82,7 +81,6 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX,i-1])
                 break
     elif (board[currentPosX][currentPosY][0]) in ('n', 'N'):
-        print("knight")
         if ( currentPosX < 7 ):
             if ( currentPosY < 6 ):
                 moves.append([currentPosX+1,currentPosY+2])
@@ -104,7 +102,6 @@ def findMoves(board, currentPosX, currentPosY):
             if ( currentPosY > 0 ):
                 moves.append([currentPosX-2,currentPosY-1])
     elif (board[currentPosX][currentPosY][0]) in ('b', 'B'):
-        print("bishop")
         i=0
         while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
             if (board[currentPosX + i +1][currentPosY + i + 1][0] == "."):
@@ -138,7 +135,6 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX - i - 1,currentPosY - i - 1])
                 break
     elif (board[currentPosX][currentPosY][0]) in ('q', 'Q'):
-        print("queen")
         i=0
         while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
             if (board[currentPosX + i +1][currentPosY + i + 1][0] == "."):
@@ -206,7 +202,6 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX,i-1])
                 break
     elif (board[currentPosX][currentPosY][0]) in ('k', 'K'):
-        print("king")
         if (currentPosX > 0):
             moves.append([currentPosX - 1,currentPosY])
             if (currentPosY > 0):
@@ -249,7 +244,6 @@ def findAttacks(board, currentPosX, currentPosY):
         if (currentPosY > 0 and board[currentPosX-1][currentPosY-1] != "."): #If attacking to left
             attacks.append([currentPosX-1,currentPosY-1])
     elif (board[currentPosX][currentPosY][0]) in ('r', 'R'):
-        print("rook")
         #Move Along X
         i=currentPosX
         while (i < 7):
@@ -285,7 +279,6 @@ def findAttacks(board, currentPosX, currentPosY):
                 attacks.append([currentPosX,i-1])
                 break
     elif (board[currentPosX][currentPosY][0]) in ('n', 'N'):
-        print("knight")
         if ( currentPosX < 7 ):
             if ( currentPosY < 6 ):
                 attacks.append([currentPosX+1,currentPosY+2])
@@ -307,7 +300,6 @@ def findAttacks(board, currentPosX, currentPosY):
             if ( currentPosY > 0 ):
                 attacks.append([currentPosX-2,currentPosY-1])
     elif (board[currentPosX][currentPosY][0]) in ('b', 'B'):
-        print("bishop")
         i=0
         while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
             if (board[currentPosX + i +1][currentPosY + i + 1][0] == "."):
@@ -341,7 +333,6 @@ def findAttacks(board, currentPosX, currentPosY):
                 attacks.append([currentPosX - i - 1,currentPosY - i - 1])
                 break
     elif (board[currentPosX][currentPosY][0]) in ('q', 'Q'):
-        print("queen")
         i=0
         while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
             if (board[currentPosX + i +1][currentPosY + i + 1][0] == "."):
@@ -409,7 +400,6 @@ def findAttacks(board, currentPosX, currentPosY):
                 attacks.append([currentPosX,i-1])
                 break
     elif (board[currentPosX][currentPosY][0]) in ('k', 'K'):
-        print("king")
         if (currentPosX > 0):
             attacks.append([currentPosX - 1,currentPosY])
             if (currentPosY > 0):
@@ -443,7 +433,16 @@ def friendlyFire(board, currentPosX, currentPosY, possibleMoves):
 # Description: Checks for Legal Move (Follows Piece Movement, Does Not Attack Own Piece)
 # Arguements: board, currentPosX, currentPosY, newPositionX, newPositionY
 # Return: True/False
-def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY):
+def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY, player):
+    #Make sure you are moving your piece
+    if player == 'w':
+        if board[currentPosX][currentPosY][0] in ('p','r','n','b','q','k','.'):
+            return (False)
+
+    if player == 'b':
+        if board[currentPosX][currentPosY][0] in ('P','R','N','B','Q','K','.'):
+            return (False)
+
     #Find Possible Moves/Attacks
     possibleMoves = findMoves(board, currentPosX, currentPosY)
 
@@ -471,7 +470,7 @@ def moveValidation(board, currentPosX, currentPosY, newPositionX,  newPositionY)
 # Arguements:
 # Return: updateBoard
 def makeMove (board, currentPosX, currentPosY, newPositionX,  newPositionY):
-    updateBoard = list(board)
+    updateBoard = copy.deepcopy(board)
     tmpPiece = updateBoard[currentPosX][currentPosY][0]
     updateBoard[currentPosX][currentPosY] = ['.',2]
     updateBoard[newPositionX][newPositionY] = [tmpPiece, 1]
@@ -577,27 +576,87 @@ def pawnPromotion(board, pawnPosX, pawnPosY, newPiece):
     updateBoard[pawnPosX][pawnPosY] = [newPiece,1]
     return(updateBoard)
 
-# Function: SendBoard
-# Description: Send Board to Client
-# Arguements:
-# Return: Error Code
-def sendBoard (board):
-    if ('P' in board[1] or 'p' in board[7]):
-        print("Pawn Promotion Sent")
-        #Send Board and wait for response
-        #Swap Pawn
-        gameboard=pawnPromotion(gameboard,pawnPosX,pawnPosY,newPiece)
-        #Send new Board
-    else:
-        print("Board Sent to Client")
+# Function: simpleBoard
+# Description: Given Board[row][column][square] simplify to Board[row][column]
+# Arguements: board
+# Return: simpleBoard
+def simpleBoard(board):
+    simpleB = []
+    r = 0
+    c = 0
+    while r < 8:
+        simpleR=[]
+        while c < 8:
+            simpleR.append(board[r][c][0])
+            c+=1
+        c=0
+        r+=1
+        simpleB.append(simpleR)
 
-#############################################################################
-#Test Code
-gameboard = startGame();
-#isCheck(gameboard,"b")
-print(isCheckMate(gameboard, "w"))
-x=0
-y=1
-#print(findMoves(gameboard,7,0))
+    for row in simpleB:
+        print(row)
 
-#moveValidation(gameboard, x,y,2,3)
+# Function: gameManager
+# Description: Runs the Game (Main Function)
+# Arguements: None
+# Return: None
+def gameManager():
+    winner = 'none'
+    playerTurn = 'w'
+
+    #Start Game
+    gameboard = startGame()
+
+    while winner == 'none':
+        vMove = False;
+        simpleBoard(gameboard)#Print Board
+        if playerTurn == 'w':
+            print("Turn: White")
+        if playerTurn == 'b':
+            print("Turn: Black")
+        while vMove != True:
+            # Take in Move (curX, curY, newX, newY)
+            txt = input("Make Your Move:")
+            move=txt.split()
+            curX=int(move[0])
+            curY=int(move[1])
+            newX=int(move[2])
+            newY=int(move[3])
+            # Check if Move Valid
+            if (moveValidation(gameboard,curX,curY,newX,newY,playerTurn) == True):
+                gameboard = makeMove(gameboard, curX, curY, newX, newY)
+                vMove = True;
+            else:
+                print("Invalid Move!")
+
+        #Check if Pawn Promotion
+        if (['P',1] in gameboard[1] ):
+            newPiece = input('Pawn Promotion! Choose Your Piece (R,N,B,Q):')
+            gameboard=pawnPromotion(gameboard,pawnPosX,pawnPosY,newPiece)
+        if (['p',1] in gameboard[7]):
+            newPiece = input('Pawn Promotion! Choose Your Piece (r,n,b,q):')
+            gameboard=pawnPromotion(gameboard,pawnPosX,pawnPosY,newPiece)
+
+        #Check for Check/CheckMate
+        if playerTurn == 'w':
+            if (isCheck(gameboard, 'b')):
+                if (isCheckMate(gameboard, 'b')):
+                    winner = 'White'
+                    print("Winner: ", winner)
+                else:
+                    print("Check")
+        elif playerTurn == 'b':
+            if (isCheck(gameboard, 'w')):
+                if (isCheckMate(gameboard, 'w')):
+                    winner = 'Black'
+                    print("Winner: ", winner)
+                else:
+                    print("Check")
+        # Change Player Turn
+        if playerTurn == 'w':
+            playerTurn = 'b'
+        else:
+            playerTurn = 'w'
+
+############################################################################
+gameManager(); #This Line Runs the game

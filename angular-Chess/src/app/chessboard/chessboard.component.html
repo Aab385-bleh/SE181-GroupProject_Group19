@@ -1,0 +1,54 @@
+<p>chessboard</p>
+<button (click)="testUpdateBoard()">test test test</button>
+<hr />
+<div class="row">
+    <div class="col left">
+        <h3>(current player)'s Turn</h3>
+    </div>
+    <div class="col middle">
+        <table cellspacing="0" cellpadding="0">
+            <tr>
+                <th colspan="10" class="element">Player: player2.getName</th>
+            </tr>
+            <tr>
+                <th class="element table-axis"></th>
+                <th *ngFor="let c of Columns" class="element table-axis">{{c}}</th>
+                <th class="element table-axis"></th>
+            </tr>
+            <tr *ngFor="let r of Rows, let i = index">
+                <th class="element table-axis">{{8-i}}</th>
+                <td *ngFor="let c of Columns, let j = index" 
+                    [style.background]="ChessBoard.BoardMatrix[7-i][j].IsWhite ? '#FECE9E' : '#D18B46'"
+                    [style.border]="ChessBoard.BoardMatrix[7-i][j].isSelected ? '2px solid red' : '2px solid transparent'" 
+                >
+                    <!-- <span class="tbbbb" 
+                        [class.selected]="ChessBoard.BoardMatrix[7-i][j].isSelected" 
+                        (click)="selectSquare(ChessBoard.BoardMatrix[7-i][j])" 
+                        id="{{ChessBoard.BoardMatrix[7-i][j]}}">
+                        {{ChessBoard.BoardMatrix[7-i][j].Piece}}
+                    </span> -->
+                    <img 
+                    [src]="getIcon(ChessBoard.BoardMatrix[7-i][j].Piece)" 
+                    (click)="selectSquare(ChessBoard.BoardMatrix[7-i][j])" 
+                    class="element"
+                    style="cursor: pointer;">
+                </td>
+                <th class="element table-axis" class="element table-axis">{{8-i}}</th>
+            </tr>
+            <tr>
+                <th class="element table-axis"></th>
+                <th *ngFor="let c of Columns" class="element table-axis">{{c}}</th>
+                <th class="element table-axis"></th>
+            </tr>
+            <tr>
+                <th colspan="10" class="element">Player: player1.getName</th>
+            </tr>
+        </table>
+    </div>
+    <div class="col right">
+        <button (click)="startGame()" class="button buttona">Start New Game</button>
+    </div>
+</div>
+
+
+

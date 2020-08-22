@@ -1,0 +1,71 @@
+.grid {
+    display: grid;
+    grid-template-columns: repeat(8, lfr);
+}
+table {
+    margin: auto;
+}
+h3 {
+    margin: auto;
+    font-family: monospace;
+    padding: 10px;
+}
+.grid > div > span {
+    padding: 6px 6px;
+    font-family: monospace;
+}
+.tbbbb {
+    padding: 6px 6px;
+    font-family: monospace;
+}
+.selected {
+    border: 3px solid red;
+}
+.element {
+    padding: 2px;
+    width: 45px;
+    height: 45px;
+    font-family: monospace;
+}
+.table-axis {
+    background-color: #654321;
+    font-family: monospace;
+    color: white;
+}
+.col {
+    float: left;
+  }
+.left, .right {
+    width: 25%;
+  }
+.middle {
+    width: 50%;
+  }
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+.button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 2px 1px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    font-family: monospace;
+}
+.buttona {
+    background-color: white; 
+    color: black; 
+    border: 2px solid #008CBA;
+ }
+ .buttona:hover {
+    background-color: #008CBA;
+    color: white;
+ }

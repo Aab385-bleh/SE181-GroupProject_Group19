@@ -24,12 +24,17 @@ export class ChessboardComponent implements OnInit {
   pieceChosen: Square = null;
   isLocationChosen: boolean = false;
   locationChosen: Square = null;
+  gameRoom="gameRoom";
 
   constructor(private websocketservice: WebsocketService, public promotiondialog: MatDialog, public gameoverdialog: MatDialog) { }
 
   ngOnInit(): void {
     //test
     // this.isWhitePlayer = true;
+    this.getRejectedMove();
+    this.getUpdatedBoard();
+    this.getUserName();
+    this.websocketservice.joinRoom(this.gameRoom);
   }
 
   startGame() {

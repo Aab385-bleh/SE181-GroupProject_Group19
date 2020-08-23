@@ -7,7 +7,7 @@ import * as io from 'socket.io-client';
 })
 export class WebsocketService {
 
-  private url = 'http://localhost:8089'; //change this to whatever URl the backend will be one
+  private url = 'http://localhost:8089'; //change this to whatever URl the backend will be on
   private socket: any;
 
   constructor() {

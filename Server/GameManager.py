@@ -11,15 +11,19 @@ import copy
 # Arguements:
 # Return: moves[]
 def startGame():
-    startingBoard=[];
+    startingBoard=[]
     #STANDARD BOARD
     #Square Structure -> [<piece>,<Moved Yet>] (0- not moved, 1- moved, 2- no piece)
-    startingBoard.append([["r",0],["n",0],["b",0],["q",0],["k",0],["b",0],["n",0],["r",0]])
+    startingBoard.append([["r",0],[".",0],[".",0],[".",0],["k",0],[".",0],[".",0],["r",0]])
+    #startingBoard.append([["r",0],["n",0],["b",0],["q",0],["k",0],["b",0],["n",0],["r",0]])
     startingBoard.append([["p",0],["p",0],["p",0],["p",0],["p",0],["p",0],["p",0],["p",0]])
-    for n in range(4):
+    i = 0
+    while i<4:
        startingBoard.append([[".",2],[".",2],[".",2],[".",2],[".",2],[".",2],[".",2],[".",2]])
+       i+=1
     startingBoard.append([["P",0],["P",0],["P",0],["P",0],["P",0],["P",0],["P",0],["P",0]])
-    startingBoard.append([["R",0],["N",0],["B",0],["Q",0],["K",0],["B",0],["N",0],["R",0]])
+    #startingBoard.append([["R",0],["N",0],["B",0],["Q",0],["K",0],["B",0],["N",0],["R",0]])
+    startingBoard.append([["R",0],[".",0],[".",0],[".",0],["K",0],[".",0],[".",0],["R",0]])
     return(startingBoard)
 
 # Function: FindMoves
@@ -103,15 +107,15 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX-2,currentPosY-1])
     elif (board[currentPosX][currentPosY][0]) in ('b', 'B'):
         i=0
-        while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
-            if (board[currentPosX + i +1][currentPosY + i + 1][0] == "."):
+        while (0 <= currentPosX + i < 7 and 0 <= currentPosY + i < 7):
+            if (board[currentPosX + i + 1][currentPosY + i + 1][0] == "."):
                 moves.append([currentPosX + i + 1,currentPosY + i + 1])
                 i += 1
             else:
                 moves.append([currentPosX + i + 1,currentPosY + i + 1])
                 break
         i=0
-        while (0 < currentPosX - i < 7 and 0 < currentPosY + i < 7):
+        while (0 < currentPosX - i <= 7 and 0 <= currentPosY + i < 7):
             if (board[currentPosX - i - 1][currentPosY + i + 1][0] == "."):
                 moves.append([currentPosX - i - 1,currentPosY + i + 1])
                 i += 1
@@ -119,7 +123,7 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX - i - 1,currentPosY + i + 1])
                 break
         i=0
-        while (0 < currentPosX + i < 7 and 0 < currentPosY - i < 7):
+        while (0 <= currentPosX + i < 7 and 0 < currentPosY - i <= 7):
             if (board[currentPosX + i + 1][currentPosY - i - 1][0] == "."):
                 moves.append([currentPosX + i + 1,currentPosY - i - 1])
                 i += 1
@@ -127,7 +131,7 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX + i + 1,currentPosY - i - 1])
                 break
         i=0
-        while (0 < currentPosX - i < 7 and 0 < currentPosY - i < 7):
+        while (0 < currentPosX - i <= 7 and 0 < currentPosY - i <= 7):
             if (board[currentPosX - i - 1][currentPosY - i - 1][0] == "."):
                 moves.append([currentPosX - i - 1,currentPosY - i - 1])
                 i += 1
@@ -136,7 +140,7 @@ def findMoves(board, currentPosX, currentPosY):
                 break
     elif (board[currentPosX][currentPosY][0]) in ('q', 'Q'):
         i=0
-        while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
+        while (0 <= currentPosX + i < 7 and 0 <= currentPosY + i < 7):
             if (board[currentPosX + i +1][currentPosY + i + 1][0] == "."):
                 moves.append([currentPosX + i + 1,currentPosY + i + 1])
                 i += 1
@@ -144,7 +148,7 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX + i + 1,currentPosY + i + 1])
                 break
         i=0
-        while (0 < currentPosX - i < 7 and 0 < currentPosY + i < 7):
+        while (0 < currentPosX - i <= 7 and 0 <= currentPosY + i < 7):
             if (board[currentPosX - i - 1][currentPosY + i + 1][0] == "."):
                 moves.append([currentPosX - i - 1,currentPosY + i + 1])
                 i += 1
@@ -152,7 +156,7 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX - i - 1,currentPosY + i + 1])
                 break
         i=0
-        while (0 < currentPosX + i < 7 and 0 < currentPosY - i < 7):
+        while (0 <= currentPosX + i < 7 and 0 < currentPosY - i <= 7):
             if (board[currentPosX + i + 1][currentPosY - i - 1][0] == "."):
                 moves.append([currentPosX + i + 1,currentPosY - i - 1])
                 i += 1
@@ -160,7 +164,7 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX + i + 1,currentPosY - i - 1])
                 break
         i=0
-        while (0 < currentPosX - i < 7 and 0 < currentPosY - i < 7):
+        while (0 < currentPosX - i <= 7 and 0 < currentPosY - i <= 7):
             if (board[currentPosX - i - 1][currentPosY - i - 1][0] == "."):
                 moves.append([currentPosX - i - 1,currentPosY - i - 1])
                 i += 1
@@ -220,9 +224,9 @@ def findMoves(board, currentPosX, currentPosY):
             moves.append([currentPosX ,currentPosY + 1])
         #Castling
         if (board[currentPosX][currentPosY][1] == 0):
-            if(board[currentPosX][5][0] == '.' and board[currentPosX][6][0] == '.' and board[currentPosX][0][1] == 0): #add [curx,5] and [curX,6] cannot put king in check
+            if(board[currentPosX][5][0] == '.' and board[currentPosX][6][0] == '.' and board[currentPosX][7][1] == 0): #add [curx,5] and [curX,6] cannot put king in check
                 moves.append([currentPosX,2])
-            if (board[currentPosX][3][0] == '.' and board[currentPosX][2][0] == '.' and board[currentPosX][7][1] == 0): #add [curx,3] and [curX,2] cannot put king in check
+            if (board[currentPosX][3][0] == '.' and board[currentPosX][2][0] == '.' and board[currentPosX][1][0] == '.' and board[currentPosX][0][1] == 0): #add [curx,3] and [curX,2] cannot put king in check
                 moves.append([currentPosX,6])
     return(moves)
 
@@ -611,8 +615,8 @@ def gameManager():
     gameboard = startGame()
 
     while winner == 'none':
-        vMove = False;
-        simpleBoard(gameboard,playerTurn)#Print Board
+        vMove = False
+        simpleBoard(gameboard,'w')#Print Board
         if playerTurn == 'w':
             print("Turn: White")
         if playerTurn == 'b':
@@ -628,7 +632,25 @@ def gameManager():
             # Check if Move Valid
             if (moveValidation(gameboard,curX,curY,newX,newY,playerTurn) == True):
                 gameboard = makeMove(gameboard, curX, curY, newX, newY)
-                vMove = True;
+                vMove = True
+                #Handle Castling
+                if (gameboard[newX][newY][0] in ('k')):
+                    if curX == 0 and curY == 4 and newX == 0:
+                        if newY == 2:
+                            #Castle Queen's Side
+                            gameboard = makeMove(gameboard, 0, 0, 0, 3)
+                        elif newY == 6:
+                            #Castle King Side
+                            gameboard = makeMove(gameboard, 0, 7, 0, 5)
+                elif (gameboard[newX][newY][0] in ('K')):
+                    if curX == 7 and curY == 4 and newX == 7:
+                        if newY == 2:
+                            #Castle Queen's Side
+                            gameboard = makeMove(gameboard, 7, 0, 7, 3)
+                        elif newY == 6:
+                            #Castle King Side
+                            gameboard = makeMove(gameboard, 7, 7, 7, 5)
+
             else:
                 print("Invalid Move!")
 
@@ -664,4 +686,7 @@ def gameManager():
             playerTurn = 'w'
 
 ############################################################################
-gameManager(); #This Line Runs the game
+gameManager() #This Line Runs the game
+#gameboard = startGame()
+#print(findMoves(gameboard,0,4))
+#print(findMoves(gameboard,7,4))

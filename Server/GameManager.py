@@ -70,7 +70,26 @@ async def handle_message(sid, moveJson, game_room):
     if (moveValidation(gameboard,curX,curY,newX,newY,playerTurn) == True):
         gameboard = makeMove(gameboard, curX, curY, newX, newY)
         vMove = True
-        
+        #Handle Castling
+        if (gameboard[newX][newY][0] in ('k')):
+            if curX == 0 and curY == 4 and newX == 0:
+                if newY == 2:
+                    #Castle Queen's Side
+                    gameboard = makeMove(gameboard, 0, 0, 0, 3)
+                elif newY == 6:
+                    #Castle King Side
+                    gameboard = makeMove(gameboard, 0, 7, 0, 5)
+        elif (gameboard[newX][newY][0] in ('K')):
+            if curX == 7 and curY == 4 and newX == 7:
+                if newY == 2:
+                    #Castle Queen's Side
+                    gameboard = makeMove(gameboard, 7, 0, 7, 3)
+                elif newY == 6:
+                    #Castle King Side
+                    gameboard = makeMove(gameboard, 7, 7, 7, 5)
+    else:
+        await sio.emit('rejectMove', room=sid)
+
     #Check if Pawn Promotion
     for c in range(8):
         if (gameboard[0][c] == ['P',1]):
@@ -113,8 +132,7 @@ async def handle_message(sid, moveJson, game_room):
     gamedata["playerTurn"] = playerTurn
 
     await sio.emit('updateBoard', gamedata, room=gameRoom)
-    #else:
-    #    await sio.emit('rejectMove', room=sid)
+
 
     
 async def createGame(): 

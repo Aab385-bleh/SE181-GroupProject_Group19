@@ -24,9 +24,9 @@ export class WebsocketService {
   
 
 
-  applyMove(move: any) {
+  applyMove(move: any, room: string) {
     // SEND MOVE TO PYTHON
-    this.socket.emit('applyMove', move);
+    this.socket.emit('applyMove', move, room);
   }
 
   getUserName() {

@@ -38,13 +38,14 @@ export class ChessboardComponent implements OnInit {
   }
 
   startGame() {
+
     this.whoseTurn = "White";
     this.ChessBoard.createStartBoard();
   }
 
   // SEND MOVE TO WEBSOCKET SERVICE
-  applyMove(move: Move) {
-    move = this.checkForPawnPromotion(move);
+  async applyMove(move: Move) {
+    move.promotedPiece = await this.checkForPawnPromotion(move);
     var coords = {
       "curX": move.currentPosition.coordinates[0],
       "curY": move.currentPosition.coordinates[1],
@@ -53,34 +54,35 @@ export class ChessboardComponent implements OnInit {
       "promotion": move.promotedPiece
     };
     alert("attempting to move: " + move.currentPosition.coordinates[0] + move.currentPosition.coordinates[1] + move.newPosition.coordinates[0]+ move.newPosition.coordinates[1]);
-    this.websocketservice.applyMove(coords);
+    this.websocketservice.applyMove(coords, this.gameRoom);
 
     return true;
   }
 
-  checkForPawnPromotion(move: Move) {
-    if ((move.currentPosition.piece.toLowerCase() == 'p') && this.isWhitePlayer && (move.newPosition.coordinates[0] == 7)) {  // white pawn promotion
+  async checkForPawnPromotion(move: Move) {
+    if ((move.currentPosition.piece.toLowerCase() == 'p') && !this.isWhitePlayer && (move.newPosition.coordinates[0] == 7)) {  // white pawn promotion
       // continue
-    } else if ((move.currentPosition.piece.toLowerCase() == 'p') && !this.isWhitePlayer && (move.newPosition.coordinates[0] == 0)) {  // black pawn promotion
+    } else if ((move.currentPosition.piece.toLowerCase() == 'p') && this.isWhitePlayer && (move.newPosition.coordinates[0] == 0)) {  // black pawn promotion
       // continue
     } else {
-      return move;
+      return "none";
     }
 
     const dialogRef = this.promotiondialog.open(PawnPromotionDialogComponent, {
       width: '300px',
     });
-    dialogRef.afterClosed().subscribe(response => {
+    return dialogRef.afterClosed().toPromise().then(response => {
+      var result = "none";
       if (response) {
         alert("promoting pawn to " + response.promotedPiece);
-        move.promotedPiece = response.promotedPiece;
+        console.log(response.promotedPiece)
+        result=response.promotedPiece;
       } else {
         console.error('Error! No response object recieved from PawnPromotion Dialog!');
       }
+      return Promise.resolve(result);
     });
-
-    return move;
-
+    
   }
 
   // GET REJECTED MOVE FROM WEBSOCKET SERVICE
@@ -89,7 +91,9 @@ export class ChessboardComponent implements OnInit {
       if (response) {
         alert("Move is not valid. Please try again.");
       }
-    });
+    },
+    err => console.error('Observer for getting Username got an error: ' + err),
+    () => console.log('Observer for getting Username got a complete notification'));
   }
 
   // GET OBSERVABLE TO GET NEW BOARD FROM WEBSOCKET SERVICE
@@ -100,12 +104,14 @@ export class ChessboardComponent implements OnInit {
     var winner: string;
     this.websocketservice.getUpdatedBoard().subscribe(response => {
       if (response) {
-        updatedBoard = response.data.gameBoard;
-        playerTurn = response.data.playerTurn;
-        player = response.data.check;
-        winner = response.data.winner;
+        console.log(JSON.stringify(response));
+        //console.log(response.data.gameBoard)
+        updatedBoard = response.gameBoard;
+        playerTurn = response.playerTurn;
+        player = response.check;
+        winner = response.winner;
         
-        if (winner) {
+        if (winner != "none") {
           alert("GAME OVER. " + winner + " has won.");
           // TODO: fix game over dialog
           // const dialoggo = this.gameoverdialog.open(GameOverDialogComponent, {data: {theWinner: winner}});
@@ -118,6 +124,7 @@ export class ChessboardComponent implements OnInit {
           // });
           
         } else {
+          console.log(playerTurn)
           if (playerTurn = 'w') {
             this.whoseTurn = "White";
           } else if (playerTurn = 'b') {
@@ -136,6 +143,7 @@ export class ChessboardComponent implements OnInit {
   getUserName() {
     this.websocketservice.getUserName().subscribe(response => {
       if (response) {
+        console.log(response.userName + response.isWhite)
         this.localUser = response.userName;
         this.isWhitePlayer = response.isWhite;
         if (response.userName == 'Player 1') {
@@ -154,40 +162,40 @@ export class ChessboardComponent implements OnInit {
   getIcon(piece: string) {
     var icon: string = null;
     switch(piece) { 
-      case "k": { 
+      case "K": { 
          icon = "assets/Chess_klt45.svg";
          break; 
-      } case "K": { 
+      } case "k": { 
         icon = "assets/Chess_kdt45.svg";
          break; 
-      } case "q": { 
+      } case "Q": { 
         icon = "assets/Chess_qlt45.svg";
          break; 
-      } case "Q": { 
+      } case "q": { 
         icon = "assets/Chess_qdt45.svg";
          break; 
-      } case "r": { 
+      } case "R": { 
         icon = "assets/Chess_rlt45.svg";
          break; 
-      } case "R": { 
+      } case "r": { 
         icon = "assets/Chess_rdt45.svg";
          break; 
-      } case "b": { 
+      } case "B": { 
         icon = "assets/Chess_blt45.svg";
          break; 
-      } case "B": { 
+      } case "b": { 
         icon = "assets/Chess_bdt45.svg";
          break; 
-      } case "n": { 
+      } case "N": { 
         icon = "assets/Chess_nlt45.svg";
          break; 
-      } case "N": { 
+      } case "n": { 
         icon = "assets/Chess_ndt45.svg";
          break; 
-      } case "p": { 
+      } case "P": { 
         icon = "assets/Chess_plt45.svg";
          break; 
-      } case "P": { 
+      } case "p": { 
         icon = "assets/Chess_pdt45.svg";
          break; 
       }
@@ -229,43 +237,43 @@ export class ChessboardComponent implements OnInit {
     }
 
     if (!this.isPieceChosen) {
-      if (sq.isOccupied) {
+      //if (sq.isOccupied) {
         this.isPieceChosen = true;
         sq.isSelected = true;
         this.pieceChosen = sq;
-      } else {
-        alert("Choose a square that's occupied.");
-      }
-    } else if (this.isPieceChosen) {
-      if(sq.isOccupied && (this.pieceChosen == sq)) {
-        // deselect
-        this.pieceChosen.isSelected = false;
-        this.isPieceChosen = false;
-        this.pieceChosen = null;
-        this.locationChosen.isSelected = false;
-        this.isLocationChosen = false;
-        this.locationChosen = null;
-      }else if (sq.isOccupied && (this.pieceChosen != sq)) {
-        if ((sq.piece == sq.piece.toLowerCase()) && (this.pieceChosen.piece == this.pieceChosen.piece.toLowerCase())) {
-          alert("Invalid. Both selected squares contain pieces on the same team. (lower)");
-        } else if ((sq.piece == sq.piece.toUpperCase()) && (this.pieceChosen.piece == this.pieceChosen.piece.toUpperCase())) {
-          alert("Invalid. Both selected squares contain pieces on the same team. (upper)");
-        } else {
-          sq.isSelected = true;
-          this.isLocationChosen = true;
-          this.locationChosen = sq;
+      //} else {
+      //  alert("Choose a square that's occupied.");
+      //}
+    // } else if (this.isPieceChosen) {
+    //   if(sq.isOccupied && (this.pieceChosen == sq)) {
+    //     // deselect
+    //     this.pieceChosen.isSelected = false;
+    //     this.isPieceChosen = false;
+    //     this.pieceChosen = null;
+    //     this.locationChosen.isSelected = false;
+    //     this.isLocationChosen = false;
+    //     this.locationChosen = null;
+      //}else if (sq.isOccupied && (this.pieceChosen != sq)) {
+        // if ((sq.piece == sq.piece.toLowerCase()) && (this.pieceChosen.piece == this.pieceChosen.piece.toLowerCase())) {
+        //   alert("Invalid. Both selected squares contain pieces on the same team. (lower)");
+        // } else if ((sq.piece == sq.piece.toUpperCase()) && (this.pieceChosen.piece == this.pieceChosen.piece.toUpperCase())) {
+        //   alert("Invalid. Both selected squares contain pieces on the same team. (upper)");
+        // } else {
+        //   sq.isSelected = true;
+        //   this.isLocationChosen = true;
+        //   this.locationChosen = sq;
 
-          var newMove: Move = new Move(this.pieceChosen, this.locationChosen, "none");
-          this.applyMove(newMove);      // APPLY MOVE ***
+        //   var newMove: Move = new Move(this.pieceChosen, this.locationChosen, "none");
+        //   this.applyMove(newMove);      // APPLY MOVE ***
 
-          // deselecting
-          this.pieceChosen.isSelected = false;
-          this.isPieceChosen = false;
-          this.pieceChosen = null;
-          this.locationChosen.isSelected = false;
-          this.isLocationChosen = false;
-          this.locationChosen = null;
-        }
+        //   // deselecting
+        //   this.pieceChosen.isSelected = false;
+        //   this.isPieceChosen = false;
+        //   this.pieceChosen = null;
+        //   this.locationChosen.isSelected = false;
+        //   this.isLocationChosen = false;
+        //   this.locationChosen = null;
+        // }
       } else {
         sq.isSelected = true;
         this.isLocationChosen = true;
@@ -285,7 +293,7 @@ export class ChessboardComponent implements OnInit {
     }
   }
 
-}
+//}
 
 class Square {
   coordinates: number[] = null;
@@ -354,7 +362,7 @@ class Board {
 class EmptyBoard {
   static createEmptyBoard(rows: string[], columns: string[]) {
     var Squares: Square[][] = new Array<Square[]>(8);
-    var isOddSquare: boolean = false;
+    var isOddSquare: boolean = true;
     for (let i = 0; i < 8; i++) {
       Squares[i] = new Array<Square>(8);
       for (let j = 0; j < 8; j++) {

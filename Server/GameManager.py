@@ -30,6 +30,9 @@ gameboard = ''
 @sio.on('join_room')
 async def handle_message(sid, room):
     sio.enter_room(sid, room=room)
+    global player1SID
+    global player2SID
+    global connectionCount 
     connectionCount = connectionCount + 1
     userName = ""
     response = {
@@ -42,6 +45,7 @@ async def handle_message(sid, room):
         player1SID = sid
     elif (connectionCount == 2):
         response["userName"] = "Player 2"
+        response["isWhite"] = "false"
         player2SID = sid
     else:
         response["userName"] = "Spectator"
@@ -49,23 +53,28 @@ async def handle_message(sid, room):
 
     # have to wait for player 2 to know who he is first before we can do a proper game
     if (connectionCount == 2):
-        createGame()
+        await createGame()
 
 @sio.on('leave_room')
 def handle_message(sid, room):
     sio.leave_room(sid, room=room)
+    global connectionCount 
     connectionCount = connectionCount - 1
 
 #moveJson should be in format {"curX": int, "curY": int, "newX": int, "promotion": char}
 @sio.on('applyMove')
 async def handle_message(sid, moveJson, game_room):
+    global gameboard
+    global playerTurn
     vMove = False
     #have to load into Python dictionary to work with it
-    move = json.loads(moveJson)
+    move = (moveJson)
+    print(move)
     curX=int(move["curX"])
     curY=int(move["curY"])
     newX=int(move["newX"])
     newY=int(move["newY"])
+    print(curX, curY, newX, newY)
     # Check if Move Valid
     if (moveValidation(gameboard,curX,curY,newX,newY,playerTurn) == True):
         gameboard = makeMove(gameboard, curX, curY, newX, newY)
@@ -87,66 +96,74 @@ async def handle_message(sid, moveJson, game_room):
                 elif newY == 6:
                     #Castle King Side
                     gameboard = makeMove(gameboard, 7, 7, 7, 5)
+    
+        print("Pawn Before")
+        #Check if Pawn Promotion
+        for c in range(8):
+            if (gameboard[0][c] == ['P',1]):
+                newPiece = move["promotion"]
+                gameboard=pawnPromotion(gameboard,0,c,newPiece,'w')
+        for c in range(8):
+            if (gameboard[7][c] == ['p',1] ):
+                newPiece = move["promotion"]
+                gameboard=pawnPromotion(gameboard,7,c,newPiece,'b')
+        print("Pawn after")
+
+        sboard = simpleBoard(gameboard, 'w')
+        #data to send down to Client
+        gamedata = {
+            "gameBoard": sboard,
+            "playerTurn": "",
+            "check": "none",
+            "winner": "none"
+        }
+
+        #Check for Check/CheckMate
+        if playerTurn == 'w':
+            if (isCheck(gameboard, 'b')):
+                if (isCheckMate(gameboard, 'b')):
+                    winner = 'Player 1'
+                    gamedata["winner"] = winner
+                else:
+                    gamedata["check"] = "Player 2"
+        elif playerTurn == 'b':
+            if (isCheck(gameboard, 'w')):
+                if (isCheckMate(gameboard, 'w')):
+                    winner = 'Player 2'
+                    gamedata["winner"] = winner
+                else:
+                    gamedata["check"] = "Player 1"
+
+        # Change Player Turn
+        if playerTurn == 'w':
+            playerTurn = 'b'
+        else:
+            playerTurn = 'w'
+        gamedata["playerTurn"] = playerTurn
+
+        await sio.emit('getUpdatedBoardResponse', gamedata, room=gameRoom)
     else:
-        await sio.emit('rejectMove', room=sid)
+        await sio.emit('getRejectedMoveResponse', "Move Rejected", room=sid)
 
-    #Check if Pawn Promotion
-    for c in range(8):
-        if (gameboard[0][c] == ['P',1]):
-            newPiece = move["promotion"]
-            gameboard=pawnPromotion(gameboard,0,c,newPiece)
-    for c in range(8):
-        if (gameboard[7][c] == ['p',1] ):
-            newPiece = move["promotion"]
-            gameboard=pawnPromotion(gameboard,7,c,newPiece)
-
-    #data to send down to Client
-    gamedata = {
-        "gameboard": gameboard,
-        "playerTurn": "",
-        "check": "none",
-        "winner": "none"
-    }
-
-    #Check for Check/CheckMate
-    if playerTurn == 'w':
-        if (isCheck(gameboard, 'b')):
-            if (isCheckMate(gameboard, 'b')):
-                winner = 'Player 1'
-                gamedata["winner"] = winner
-            else:
-                gamedata["check"] = "Player 2"
-    elif playerTurn == 'b':
-        if (isCheck(gameboard, 'w')):
-            if (isCheckMate(gameboard, 'w')):
-                winner = 'Player 2'
-                gamedata["winner"] = winner
-            else:
-                gamedata["check"] = "Player 1"
-
-    # Change Player Turn
-    if playerTurn == 'w':
-        playerTurn = 'b'
-    else:
-        playerTurn = 'w'
-    gamedata["playerTurn"] = playerTurn
-
-    await sio.emit('updateBoard', gamedata, room=gameRoom)
+    
 
 
     
 async def createGame(): 
+    global playerTurn
+    global gameboard
     playerTurn = 'w'
     gameboard = startGame()
+    sboard = simpleBoard(gameboard, 'w')
     
     #data to send down to Client
     gamedata = {
-        "gameboard": gameboard,
+        "gameBoard": sboard,
         "playerTurn": playerTurn,
         "check": "none",
         "winner": "none"
     }
-    await sio.emit('updateBoard', gamedata, room=gameRoom)
+    await sio.emit('getUpdatedBoardResponse', gamedata, room=gameRoom)
 
 # Function: StartGame
 # Description: Initializes Chess Board with starting positions
@@ -172,16 +189,18 @@ def findMoves(board, currentPosX, currentPosY):
     moves=[]
 
     if (board[currentPosX][currentPosY][0]) in ('p'):
-        moves.append([currentPosX+1,currentPosY])
-        if (board[currentPosX][currentPosY][1] == 0):   #If in Starting Position
+        if (board[currentPosX+1][currentPosY][0] == '.'):
+            moves.append([currentPosX+1,currentPosY])
+        if (board[currentPosX][currentPosY][1] == 0 and board[currentPosX+2][currentPosY][0] == '.'):   #If in Starting Position
             moves.append([currentPosX+2,currentPosY])
         if (currentPosY < 7 and board[currentPosX+1][currentPosY+1][0] != "."): #If attacking to left
             moves.append([currentPosX+1,currentPosY+1])
         if (currentPosY > 0 and board[currentPosX+1][currentPosY-1][0] != "."): #If attacking to Right
             moves.append([currentPosX+1,currentPosY-1])
     elif (board[currentPosX][currentPosY][0]) in ('P'):
-        moves.append([currentPosX-1,currentPosY])
-        if (board[currentPosX][currentPosY][1] == 0):   #If in Starting Position
+        if (board[currentPosX-1][currentPosY][0] == '.'):
+            moves.append([currentPosX-1,currentPosY])
+        if (board[currentPosX][currentPosY][1] == 0 and board[currentPosX-2][currentPosY][0] == '.'):   #If in Starting Position
             moves.append([currentPosX-2,currentPosY])
         if (currentPosY < 7 and board[currentPosX-1][currentPosY+1][0] != "."): #If attacking to Right
             moves.append([currentPosX-1,currentPosY+1])
@@ -700,12 +719,12 @@ def isCheckMate(board, player):
         i = 0
         while i < len(allies):
             for m in possibleMoves[i]:
-                print(m)
                 testMove = makeMove(testBoard, allies[i][0], allies[i][1], m[0], m[1])
                 if (isCheck(testMove, player)):
                     testBoard = copy.deepcopy(currentBoard)
                 else:
                     return(False) #Is not in Checkmate
+            i+=1
          #Is in Checkmate
         return(True)
 
@@ -713,9 +732,30 @@ def isCheckMate(board, player):
 # Description: Promote Pawn When Reaching Other Side Of Board
 # Arguements: board, pawnPosX, pawnPosY, newPiece
 # Return: updateBoard
-def pawnPromotion(board, pawnPosX, pawnPosY, newPiece):
+def pawnPromotion(board, pawnPosX, pawnPosY, newPiece, player):
+    swap =''
+
+    if (player == 'w'):
+        if newPiece == "Queen":
+            swap = 'Q'
+        elif newPiece == "Bishop":
+            swap = 'B'
+        elif newPiece == "Rook":
+            swap = 'R'
+        elif newPiece == "Knight":
+            swap = 'N'
+    else:
+        if newPiece == "Queen":
+            swap = 'q'
+        elif newPiece == "Bishop":
+            swap = 'b'
+        elif newPiece == "Rook":
+            swap = 'r'
+        elif newPiece == "Knight":
+            swap = 'n'
+
     updateBoard = board
-    updateBoard[pawnPosX][pawnPosY] = [newPiece,1]
+    updateBoard[pawnPosX][pawnPosY] = [swap,1]
     return(updateBoard)
 
 # Function: simpleBoard
@@ -738,8 +778,8 @@ def simpleBoard(board,player):
         r+=1
         simpleB.append(simpleR)
 
-    for row in simpleB:
-        print(row)
+    #for row in simpleB:
+    #    print(row)
     return(simpleB)
 
 # for the sake of simplicity, let's assume player 1 is white and player 2 is black

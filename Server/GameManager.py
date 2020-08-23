@@ -362,10 +362,10 @@ def findMoves(board, currentPosX, currentPosY):
             moves.append([currentPosX ,currentPosY + 1])
         #Castling
         if (board[currentPosX][currentPosY][1] == 0):
-            if(board[currentPosX][5][0] == '.' and board[currentPosX][6][0] == '.' and board[currentPosX][0][1] == 0): #add [curx,5] and [curX,6] cannot put king in check
-                moves.append([currentPosX,2])
-            if (board[currentPosX][3][0] == '.' and board[currentPosX][2][0] == '.' and board[currentPosX][7][1] == 0): #add [curx,3] and [curX,2] cannot put king in check
+            if(board[currentPosX][5][0] == '.' and board[currentPosX][6][0] == '.' and board[currentPosX][7][1] == 0): #add [curx,5] and [curX,6] cannot put king in check
                 moves.append([currentPosX,6])
+            if (board[currentPosX][3][0] == '.' and board[currentPosX][2][0] == '.' and board[currentPosX][1][0] == '.' and board[currentPosX][0][1] == 0): #add [curx,3] and [curX,2] cannot put king in check
+                moves.append([currentPosX,2])
     return(moves)
 
 # Function: FindAttacks

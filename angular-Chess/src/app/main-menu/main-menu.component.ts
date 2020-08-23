@@ -104,5 +104,5 @@ export class MainMenuComponent implements OnInit {
   }
 
   //
-  reactToInviteResponse()
+  // reactToInviteResponse()
 }

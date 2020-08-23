@@ -1,3 +1,15 @@
+h1 {
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    text-align: center;
+    color: #ffce00;
+    font-size: 50px;
+}
+hr {
+    width:50%;
+    border: 4px dotted #ffce00;
+    border-style: none none dotted;
+}
 .grid {
     display: grid;
     grid-template-columns: repeat(8, lfr);
@@ -5,10 +17,19 @@
 table {
     margin: auto;
 }
+p {
+    font-family: 'Cardo', serif;
+    /* color: #c0ccd4; */
+    color: white;
+    text-align: center;
+}
 h3 {
     margin: auto;
-    font-family: monospace;
-    padding: 10px;
+    font-family: 'Cardo', serif;
+    /* padding: 10px; */
+    text-align: center;
+    /* color: #c0ccd4; */
+    color: white;
 }
 .grid > div > span {
     padding: 6px 6px;
@@ -25,7 +46,9 @@ h3 {
     padding: 2px;
     width: 45px;
     height: 45px;
-    font-family: monospace;
+    font-family: 'Cardo', serif;
+    /* color: #c0ccd4; */
+    color: white;
 }
 .table-axis {
     background-color: #654321;
@@ -46,26 +69,28 @@ h3 {
     display: table;
     clear: both;
   }
-.button {
-    background-color: #4CAF50; /* Green */
-    border: none;
-    color: white;
-    padding: 10px;
+  .button {
+    font-family: 'Oswald', sans-serif;
+    padding: 10px 20px;
+    font-size: 17px;
+    cursor: pointer;
     text-align: center;
     text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 2px 1px;
-    transition-duration: 0.4s;
-    cursor: pointer;
-    font-family: monospace;
-}
-.buttona {
-    background-color: white; 
-    color: black; 
-    border: 2px solid #008CBA;
- }
- .buttona:hover {
-    background-color: #008CBA;
-    color: white;
- }
+    outline: none;
+    color: #484d5c;
+    background-color: #ffce00;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px #999;
+    margin-top: 25%;
+    margin-bottom: 20%;
+  }
+  
+  .button:hover {background-color: #e6b900}
+  
+  .button:active {
+    background-color: #e6b900;
+    box-shadow: 0 2px #666;
+    transform: translateY(4px);
+    color: #484d5c;
+  }

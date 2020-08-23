@@ -24,12 +24,17 @@ export class ChessboardComponent implements OnInit {
   pieceChosen: Square = null;
   isLocationChosen: boolean = false;
   locationChosen: Square = null;
+  gameRoom="gameRoom";
 
   constructor(private websocketservice: WebsocketService, public promotiondialog: MatDialog, public gameoverdialog: MatDialog) { }
 
   ngOnInit(): void {
     //test
     // this.isWhitePlayer = true;
+    this.getRejectedMove();
+    this.getUpdatedBoard();
+    this.getUserName();
+    this.websocketservice.joinRoom(this.gameRoom);
   }
 
   startGame() {
@@ -41,11 +46,11 @@ export class ChessboardComponent implements OnInit {
   applyMove(move: Move) {
     move = this.checkForPawnPromotion(move);
     var coords = {
-      "x1": move.currentPosition.coordinates[0],
-      "y1": move.currentPosition.coordinates[1],
-      "x2": move.newPosition.coordinates[0],
-      "y2": move.newPosition.coordinates[1],
-      "promotedPiece": move.promotedPiece
+      "curX": move.currentPosition.coordinates[0],
+      "curY": move.currentPosition.coordinates[1],
+      "newX": move.newPosition.coordinates[0],
+      "newY": move.newPosition.coordinates[1],
+      "promotion": move.promotedPiece
     };
     alert("attempting to move: " + move.currentPosition.coordinates[0] + move.currentPosition.coordinates[1] + move.newPosition.coordinates[0]+ move.newPosition.coordinates[1]);
     this.websocketservice.applyMove(coords);
@@ -69,6 +74,8 @@ export class ChessboardComponent implements OnInit {
       if (response) {
         alert("promoting pawn to " + response.promotedPiece);
         move.promotedPiece = response.promotedPiece;
+      } else {
+        console.error('Error! No response object recieved from PawnPromotion Dialog!');
       }
     });
 
@@ -85,7 +92,7 @@ export class ChessboardComponent implements OnInit {
     });
   }
 
-  // GET NEW BOARD FROM WEBSOCKET SERVICE
+  // GET OBSERVABLE TO GET NEW BOARD FROM WEBSOCKET SERVICE
   getUpdatedBoard() {
     var updatedBoard: string[][];
     var playerTurn: string;
@@ -97,35 +104,37 @@ export class ChessboardComponent implements OnInit {
         playerTurn = response.data.playerTurn;
         player = response.data.check;
         winner = response.data.winner;
+        
+        if (winner) {
+          alert("GAME OVER. " + winner + " has won.");
+          // TODO: fix game over dialog
+          // const dialoggo = this.gameoverdialog.open(GameOverDialogComponent, {data: {theWinner: winner}});
+          // dialoggo.afterClosed().subscribe(response => {
+          //   if (response) {
+          //     if(response.decision == 'startnew') {
+          //       this.ChessBoard.createStartBoard(); // RESET BOARD
+          //     }
+          //   }
+          // });
+          
+        } else {
+          if (playerTurn = 'w') {
+            this.whoseTurn = "White";
+          } else if (playerTurn = 'b') {
+            this.whoseTurn = "Black";
+          }
+          this.ChessBoard.updateBoard(updatedBoard);    // UPDATE BOARD
+        }
       }
-    });
-    
-    if (winner) {
-      alert("GAME OVER. " + winner + " has won.");
-      // TODO: fix game over dialog
-      // const dialoggo = this.gameoverdialog.open(GameOverDialogComponent, {data: {theWinner: winner}});
-      // dialoggo.afterClosed().subscribe(response => {
-      //   if (response) {
-      //     if(response.decision == 'startnew') {
-      //       this.ChessBoard.createStartBoard(); // RESET BOARD
-      //     }
-      //   }
-      // });
-      
-    } else {
-      if (playerTurn = 'w') {
-        this.whoseTurn = "White";
-      } else if (playerTurn = 'b') {
-        this.whoseTurn = "Black";
-      }
-      this.ChessBoard.updateBoard(updatedBoard);    // UPDATE BOARD
-    }
+    },
+    err => console.error('Observer for getting Board got an error: ' + err),
+    () => console.log('Observer for getting Board got a complete notification'));
     
   }
 
   // GET USERNAME FROM WEBSOCKET SERVICE 
   getUserName() {
-    this.websocketservice.getUpdatedBoard().subscribe(response => {
+    this.websocketservice.getUserName().subscribe(response => {
       if (response) {
         this.localUser = response.userName;
         this.isWhitePlayer = response.isWhite;
@@ -135,8 +144,9 @@ export class ChessboardComponent implements OnInit {
           this.opposingPlayer = 'Player 1';
         }
       }
-    });
-
+    },
+    err => console.error('Observer for getting Username got an error: ' + err),
+    () => console.log('Observer for getting Username got a complete notification'));
 
   }
 

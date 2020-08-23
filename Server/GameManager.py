@@ -3,8 +3,130 @@
 # Created: 8/17/2020
 # Updated: 8/21/2020
 # SE181 - Group 19
-import socket
+from aiohttp import web
+import socketio
 import copy
+import json
+
+sio = socketio.AsyncServer(async_mode='aiohttp', logger=True, engineio_logger=True)
+
+app = web.Application()
+sio.attach(app)
+
+# Global var to keep track of users connected to Server
+connectionCount = 0
+# hardcoded Game Room name, change if neccesary
+# just to make sure Server knows what room to emit to when sending to both players
+gameRoom = "gameRoom"
+player1SID = ''
+player2SID = ''
+
+winner = 'none'
+playerTurn = 'none'
+gameboard = ''
+
+# function to be performed when a client attempts to join a room, presumably the gameRoom
+@sio.on('join_room')
+async def handle_message(sid, room):
+    sio.enter_room(sid, room=room)
+    connectionCount = connectionCount + 1
+    userName = ""
+    response = {
+        "userName": "",
+        "isWhite:": "false"
+    }
+    if (connectionCount == 1):
+        response["userName"] = "Player 1"
+        response["isWhite"] = "true"
+        player1SID = sid
+    elif (connectionCount == 2):
+        response["userName"] = "Player 2"
+        player2SID = sid
+    else:
+        response["userName"] = "Spectator"
+    await sio.emit('getUserName', response, room=sid)
+
+    # have to wait for player 2 to know who he is first before we can do a proper game
+    if (connectionCount == 2):
+        createGame()
+
+@sio.on('leave_room')
+def handle_message(sid, room):
+    sio.leave_room(sid, room=room)
+    connectionCount = connectionCount - 1
+
+#moveJson should be in format {"curX": int, "curY": int, "newX": int, "promotion": char}
+@sio.on('applyMove')
+async def handle_message(sid, moveJson, game_room):
+    vMove = False
+    #have to load into Python dictionary to work with it
+    move = json.loads(moveJson)
+    curX=int(move["curX"])
+    curY=int(move["curY"])
+    newX=int(move["newX"])
+    newY=int(move["newY"])
+    # Check if Move Valid
+    if (moveValidation(gameboard,curX,curY,newX,newY,playerTurn) == True):
+        gameboard = makeMove(gameboard, curX, curY, newX, newY)
+        vMove = True
+        
+    #Check if Pawn Promotion
+    for c in range(8):
+        if (gameboard[0][c] == ['P',1]):
+            newPiece = move["promotion"]
+            gameboard=pawnPromotion(gameboard,0,c,newPiece)
+    for c in range(8):
+        if (gameboard[7][c] == ['p',1] ):
+            newPiece = move["promotion"]
+            gameboard=pawnPromotion(gameboard,7,c,newPiece)
+
+    #data to send down to Client
+    gamedata = {
+        "gameboard": gameboard,
+        "playerTurn": "",
+        "check": "none",
+        "winner": "none"
+    }
+
+    #Check for Check/CheckMate
+    if playerTurn == 'w':
+        if (isCheck(gameboard, 'b')):
+            if (isCheckMate(gameboard, 'b')):
+                winner = 'Player 1'
+                gamedata["winner"] = winner
+            else:
+                gamedata["check"] = "Player 2"
+    elif playerTurn == 'b':
+        if (isCheck(gameboard, 'w')):
+            if (isCheckMate(gameboard, 'w')):
+                winner = 'Player 2'
+                gamedata["winner"] = winner
+            else:
+                gamedata["check"] = "Player 1"
+    # Change Player Turn
+    if playerTurn == 'w':
+        playerTurn = 'b'
+    else:
+        playerTurn = 'w'
+    gamedata["playerTurn"] = playerTurn
+
+    await sio.emit('updateBoard', gamedata, room=gameRoom)
+    else:
+        await sio.emit('rejectMove', room=sid)
+
+    
+async def createGame(): 
+    playerTurn = 'w'
+    gameboard = startGame()
+    
+    #data to send down to Client
+    gamedata = {
+        "gameboard": gameboard,
+        "playerTurn": playerTurn
+        "check": "none",
+        "winner": "none"
+    }
+    await sio.emit('updateBoard', gamedata, room=gameRoom)
 
 # Function: StartGame
 # Description: Initializes Chess Board with starting positions
@@ -598,70 +720,10 @@ def simpleBoard(board,player):
 
     for row in simpleB:
         print(row)
+    return(simpleB)
 
-# Function: gameManager
-# Description: Runs the Game (Main Function)
-# Arguements: None
-# Return: None
-def gameManager():
-    winner = 'none'
-    playerTurn = 'w'
-
-    #Start Game
-    gameboard = startGame()
-
-    while winner == 'none':
-        vMove = False;
-        simpleBoard(gameboard,playerTurn)#Print Board
-        if playerTurn == 'w':
-            print("Turn: White")
-        if playerTurn == 'b':
-            print("Turn: Black")
-        while vMove != True:
-            # Take in Move (curX, curY, newX, newY)
-            txt = input("Make Your Move:")
-            move=txt.split()
-            curX=int(move[0])
-            curY=int(move[1])
-            newX=int(move[2])
-            newY=int(move[3])
-            # Check if Move Valid
-            if (moveValidation(gameboard,curX,curY,newX,newY,playerTurn) == True):
-                gameboard = makeMove(gameboard, curX, curY, newX, newY)
-                vMove = True;
-            else:
-                print("Invalid Move!")
-
-        #Check if Pawn Promotion
-        for c in range(8):
-            if ( gameboard[0][c] == ['P',1]):
-                newPiece = input('Pawn Promotion! Choose Your Piece (R,N,B,Q):')
-                gameboard=pawnPromotion(gameboard,0,c,newPiece)
-        for c in range(8):
-            if (gameboard[7][c] == ['p',1] ):
-                newPiece = input('Pawn Promotion! Choose Your Piece (r,n,b,q):')
-                gameboard=pawnPromotion(gameboard,7,c,newPiece)
-
-        #Check for Check/CheckMate
-        if playerTurn == 'w':
-            if (isCheck(gameboard, 'b')):
-                if (isCheckMate(gameboard, 'b')):
-                    winner = 'White'
-                    print("Winner: ", winner)
-                else:
-                    print("Check")
-        elif playerTurn == 'b':
-            if (isCheck(gameboard, 'w')):
-                if (isCheckMate(gameboard, 'w')):
-                    winner = 'Black'
-                    print("Winner: ", winner)
-                else:
-                    print("Check")
-        # Change Player Turn
-        if playerTurn == 'w':
-            playerTurn = 'b'
-        else:
-            playerTurn = 'w'
+# for the sake of simplicity, let's assume player 1 is white and player 2 is black
 
 ############################################################################
-gameManager(); #This Line Runs the game
+if __name__ == '__main__':
+    web.run_app(app, port=8089)

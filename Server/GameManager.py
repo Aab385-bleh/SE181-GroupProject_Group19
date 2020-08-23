@@ -3,15 +3,157 @@
 # Created: 8/17/2020
 # Updated: 8/21/2020
 # SE181 - Group 19
-import socket
+from aiohttp import web
+import socketio
+import asyncio
 import copy
+import json
+
+sio = socketio.AsyncServer(async_mode='aiohttp', cors_allowed_origins=['http://localhost:4200','http://localhost:1234'], logger=True, engineio_logger=True)
+
+app = web.Application()
+sio.attach(app)
+
+# Global var to keep track of users connected to Server
+connectionCount = 0
+# hardcoded Game Room name, change if neccesary
+# just to make sure Server knows what room to emit to when sending to both players
+gameRoom = "gameRoom"
+player1SID = ''
+player2SID = ''
+
+winner = 'none'
+playerTurn = 'none'
+gameboard = ''
+
+# function to be performed when a client attempts to join a room, presumably the gameRoom
+@sio.on('join_room')
+async def handle_message(sid, room):
+    sio.enter_room(sid, room=room)
+    connectionCount = connectionCount + 1
+    userName = ""
+    response = {
+        "userName": "",
+        "isWhite:": "false"
+    }
+    if (connectionCount == 1):
+        response["userName"] = "Player 1"
+        response["isWhite"] = "true"
+        player1SID = sid
+    elif (connectionCount == 2):
+        response["userName"] = "Player 2"
+        player2SID = sid
+    else:
+        response["userName"] = "Spectator"
+    await sio.emit('getUserName', response, room=sid)
+
+    # have to wait for player 2 to know who he is first before we can do a proper game
+    if (connectionCount == 2):
+        createGame()
+
+@sio.on('leave_room')
+def handle_message(sid, room):
+    sio.leave_room(sid, room=room)
+    connectionCount = connectionCount - 1
+
+#moveJson should be in format {"curX": int, "curY": int, "newX": int, "promotion": char}
+@sio.on('applyMove')
+async def handle_message(sid, moveJson, game_room):
+    vMove = False
+    #have to load into Python dictionary to work with it
+    move = json.loads(moveJson)
+    curX=int(move["curX"])
+    curY=int(move["curY"])
+    newX=int(move["newX"])
+    newY=int(move["newY"])
+    # Check if Move Valid
+    if (moveValidation(gameboard,curX,curY,newX,newY,playerTurn) == True):
+        gameboard = makeMove(gameboard, curX, curY, newX, newY)
+        vMove = True
+        #Handle Castling
+        if (gameboard[newX][newY][0] in ('k')):
+            if curX == 0 and curY == 4 and newX == 0:
+                if newY == 2:
+                    #Castle Queen's Side
+                    gameboard = makeMove(gameboard, 0, 0, 0, 3)
+                elif newY == 6:
+                    #Castle King Side
+                    gameboard = makeMove(gameboard, 0, 7, 0, 5)
+        elif (gameboard[newX][newY][0] in ('K')):
+            if curX == 7 and curY == 4 and newX == 7:
+                if newY == 2:
+                    #Castle Queen's Side
+                    gameboard = makeMove(gameboard, 7, 0, 7, 3)
+                elif newY == 6:
+                    #Castle King Side
+                    gameboard = makeMove(gameboard, 7, 7, 7, 5)
+    else:
+        await sio.emit('rejectMove', room=sid)
+
+    #Check if Pawn Promotion
+    for c in range(8):
+        if (gameboard[0][c] == ['P',1]):
+            newPiece = move["promotion"]
+            gameboard=pawnPromotion(gameboard,0,c,newPiece)
+    for c in range(8):
+        if (gameboard[7][c] == ['p',1] ):
+            newPiece = move["promotion"]
+            gameboard=pawnPromotion(gameboard,7,c,newPiece)
+
+    #data to send down to Client
+    gamedata = {
+        "gameboard": gameboard,
+        "playerTurn": "",
+        "check": "none",
+        "winner": "none"
+    }
+
+    #Check for Check/CheckMate
+    if playerTurn == 'w':
+        if (isCheck(gameboard, 'b')):
+            if (isCheckMate(gameboard, 'b')):
+                winner = 'Player 1'
+                gamedata["winner"] = winner
+            else:
+                gamedata["check"] = "Player 2"
+    elif playerTurn == 'b':
+        if (isCheck(gameboard, 'w')):
+            if (isCheckMate(gameboard, 'w')):
+                winner = 'Player 2'
+                gamedata["winner"] = winner
+            else:
+                gamedata["check"] = "Player 1"
+
+    # Change Player Turn
+    if playerTurn == 'w':
+        playerTurn = 'b'
+    else:
+        playerTurn = 'w'
+    gamedata["playerTurn"] = playerTurn
+
+    await sio.emit('updateBoard', gamedata, room=gameRoom)
+
+
+    
+async def createGame(): 
+    playerTurn = 'w'
+    gameboard = startGame()
+    
+    #data to send down to Client
+    gamedata = {
+        "gameboard": gameboard,
+        "playerTurn": playerTurn,
+        "check": "none",
+        "winner": "none"
+    }
+    await sio.emit('updateBoard', gamedata, room=gameRoom)
 
 # Function: StartGame
 # Description: Initializes Chess Board with starting positions
 # Arguements:
 # Return: moves[]
 def startGame():
-    startingBoard=[];
+    startingBoard=[]
     #STANDARD BOARD
     #Square Structure -> [<piece>,<Moved Yet>] (0- not moved, 1- moved, 2- no piece)
     startingBoard.append([["r",0],["n",0],["b",0],["q",0],["k",0],["b",0],["n",0],["r",0]])
@@ -103,7 +245,7 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX-2,currentPosY-1])
     elif (board[currentPosX][currentPosY][0]) in ('b', 'B'):
         i=0
-        while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
+        while (0 <= currentPosX + i < 7 and 0 <= currentPosY + i < 7):
             if (board[currentPosX + i +1][currentPosY + i + 1][0] == "."):
                 moves.append([currentPosX + i + 1,currentPosY + i + 1])
                 i += 1
@@ -111,7 +253,7 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX + i + 1,currentPosY + i + 1])
                 break
         i=0
-        while (0 < currentPosX - i < 7 and 0 < currentPosY + i < 7):
+        while (0 < currentPosX - i <= 7 and 0 <= currentPosY + i < 7):
             if (board[currentPosX - i - 1][currentPosY + i + 1][0] == "."):
                 moves.append([currentPosX - i - 1,currentPosY + i + 1])
                 i += 1
@@ -119,7 +261,7 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX - i - 1,currentPosY + i + 1])
                 break
         i=0
-        while (0 < currentPosX + i < 7 and 0 < currentPosY - i < 7):
+        while (0 <= currentPosX + i < 7 and 0 < currentPosY - i <= 7):
             if (board[currentPosX + i + 1][currentPosY - i - 1][0] == "."):
                 moves.append([currentPosX + i + 1,currentPosY - i - 1])
                 i += 1
@@ -127,7 +269,7 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX + i + 1,currentPosY - i - 1])
                 break
         i=0
-        while (0 < currentPosX - i < 7 and 0 < currentPosY - i < 7):
+        while (0 < currentPosX - i <= 7 and 0 < currentPosY - i <= 7):
             if (board[currentPosX - i - 1][currentPosY - i - 1][0] == "."):
                 moves.append([currentPosX - i - 1,currentPosY - i - 1])
                 i += 1
@@ -136,7 +278,7 @@ def findMoves(board, currentPosX, currentPosY):
                 break
     elif (board[currentPosX][currentPosY][0]) in ('q', 'Q'):
         i=0
-        while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
+        while (0 <= currentPosX + i < 7 and 0 <= currentPosY + i < 7):
             if (board[currentPosX + i +1][currentPosY + i + 1][0] == "."):
                 moves.append([currentPosX + i + 1,currentPosY + i + 1])
                 i += 1
@@ -144,7 +286,7 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX + i + 1,currentPosY + i + 1])
                 break
         i=0
-        while (0 < currentPosX - i < 7 and 0 < currentPosY + i < 7):
+        while (0 < currentPosX - i <= 7 and 0 <= currentPosY + i < 7):
             if (board[currentPosX - i - 1][currentPosY + i + 1][0] == "."):
                 moves.append([currentPosX - i - 1,currentPosY + i + 1])
                 i += 1
@@ -152,7 +294,7 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX - i - 1,currentPosY + i + 1])
                 break
         i=0
-        while (0 < currentPosX + i < 7 and 0 < currentPosY - i < 7):
+        while (0 <= currentPosX + i < 7 and 0 < currentPosY - i <= 7):
             if (board[currentPosX + i + 1][currentPosY - i - 1][0] == "."):
                 moves.append([currentPosX + i + 1,currentPosY - i - 1])
                 i += 1
@@ -160,7 +302,7 @@ def findMoves(board, currentPosX, currentPosY):
                 moves.append([currentPosX + i + 1,currentPosY - i - 1])
                 break
         i=0
-        while (0 < currentPosX - i < 7 and 0 < currentPosY - i < 7):
+        while (0 < currentPosX - i <= 7 and 0 < currentPosY - i <= 7):
             if (board[currentPosX - i - 1][currentPosY - i - 1][0] == "."):
                 moves.append([currentPosX - i - 1,currentPosY - i - 1])
                 i += 1
@@ -220,10 +362,10 @@ def findMoves(board, currentPosX, currentPosY):
             moves.append([currentPosX ,currentPosY + 1])
         #Castling
         if (board[currentPosX][currentPosY][1] == 0):
-            if(board[currentPosX][5][0] == '.' and board[currentPosX][6][0] == '.' and board[currentPosX][0][1] == 0): #add [curx,5] and [curX,6] cannot put king in check
-                moves.append([currentPosX,2])
-            if (board[currentPosX][3][0] == '.' and board[currentPosX][2][0] == '.' and board[currentPosX][7][1] == 0): #add [curx,3] and [curX,2] cannot put king in check
+            if(board[currentPosX][5][0] == '.' and board[currentPosX][6][0] == '.' and board[currentPosX][7][1] == 0): #add [curx,5] and [curX,6] cannot put king in check
                 moves.append([currentPosX,6])
+            if (board[currentPosX][3][0] == '.' and board[currentPosX][2][0] == '.' and board[currentPosX][1][0] == '.' and board[currentPosX][0][1] == 0): #add [curx,3] and [curX,2] cannot put king in check
+                moves.append([currentPosX,2])
     return(moves)
 
 # Function: FindAttacks
@@ -301,7 +443,7 @@ def findAttacks(board, currentPosX, currentPosY):
                 attacks.append([currentPosX-2,currentPosY-1])
     elif (board[currentPosX][currentPosY][0]) in ('b', 'B'):
         i=0
-        while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
+        while (0 <= currentPosX + i < 7 and 0 <= currentPosY + i < 7):
             if (board[currentPosX + i +1][currentPosY + i + 1][0] == "."):
                 attacks.append([currentPosX + i + 1,currentPosY + i + 1])
                 i += 1
@@ -309,7 +451,7 @@ def findAttacks(board, currentPosX, currentPosY):
                 attacks.append([currentPosX + i + 1,currentPosY + i + 1])
                 break
         i=0
-        while (0 < currentPosX - i < 7 and 0 < currentPosY + i < 7):
+        while (0 < currentPosX - i <= 7 and 0 <= currentPosY + i < 7):
             if (board[currentPosX - i - 1][currentPosY + i + 1][0] == "."):
                 attacks.append([currentPosX - i - 1,currentPosY + i + 1])
                 i += 1
@@ -317,7 +459,7 @@ def findAttacks(board, currentPosX, currentPosY):
                 attacks.append([currentPosX - i - 1,currentPosY + i + 1])
                 break
         i=0
-        while (0 < currentPosX + i < 7 and 0 < currentPosY - i < 7):
+        while (0 <= currentPosX + i < 7 and 0 < currentPosY - i <= 7):
             if (board[currentPosX + i + 1][currentPosY - i - 1][0] == "."):
                 attacks.append([currentPosX + i + 1,currentPosY - i - 1])
                 i += 1
@@ -325,7 +467,7 @@ def findAttacks(board, currentPosX, currentPosY):
                 attacks.append([currentPosX + i + 1,currentPosY - i - 1])
                 break
         i=0
-        while (0 < currentPosX - i < 7 and 0 < currentPosY - i < 7):
+        while (0 < currentPosX - i <= 7 and 0 < currentPosY - i <= 7):
             if (board[currentPosX - i - 1][currentPosY - i - 1][0] == "."):
                 attacks.append([currentPosX - i - 1,currentPosY - i - 1])
                 i += 1
@@ -334,7 +476,7 @@ def findAttacks(board, currentPosX, currentPosY):
                 break
     elif (board[currentPosX][currentPosY][0]) in ('q', 'Q'):
         i=0
-        while (0 < currentPosX + i < 7 and 0 < currentPosY + i < 7):
+        while (0 <= currentPosX + i < 7 and 0 <= currentPosY + i < 7):
             if (board[currentPosX + i +1][currentPosY + i + 1][0] == "."):
                 attacks.append([currentPosX + i + 1,currentPosY + i + 1])
                 i += 1
@@ -342,7 +484,7 @@ def findAttacks(board, currentPosX, currentPosY):
                 attacks.append([currentPosX + i + 1,currentPosY + i + 1])
                 break
         i=0
-        while (0 < currentPosX - i < 7 and 0 < currentPosY + i < 7):
+        while (0 < currentPosX - i <= 7 and 0 <= currentPosY + i < 7):
             if (board[currentPosX - i - 1][currentPosY + i + 1][0] == "."):
                 attacks.append([currentPosX - i - 1,currentPosY + i + 1])
                 i += 1
@@ -350,7 +492,7 @@ def findAttacks(board, currentPosX, currentPosY):
                 attacks.append([currentPosX - i - 1,currentPosY + i + 1])
                 break
         i=0
-        while (0 < currentPosX + i < 7 and 0 < currentPosY - i < 7):
+        while (0 <= currentPosX + i < 7 and 0 < currentPosY - i <= 7):
             if (board[currentPosX + i + 1][currentPosY - i - 1][0] == "."):
                 attacks.append([currentPosX + i + 1,currentPosY - i - 1])
                 i += 1
@@ -358,7 +500,7 @@ def findAttacks(board, currentPosX, currentPosY):
                 attacks.append([currentPosX + i + 1,currentPosY - i - 1])
                 break
         i=0
-        while (0 < currentPosX - i < 7 and 0 < currentPosY - i < 7):
+        while (0 < currentPosX - i <= 7 and 0 < currentPosY - i <= 7):
             if (board[currentPosX - i - 1][currentPosY - i - 1][0] == "."):
                 attacks.append([currentPosX - i - 1,currentPosY - i - 1])
                 i += 1
@@ -598,70 +740,10 @@ def simpleBoard(board,player):
 
     for row in simpleB:
         print(row)
+    return(simpleB)
 
-# Function: gameManager
-# Description: Runs the Game (Main Function)
-# Arguements: None
-# Return: None
-def gameManager():
-    winner = 'none'
-    playerTurn = 'w'
-
-    #Start Game
-    gameboard = startGame()
-
-    while winner == 'none':
-        vMove = False;
-        simpleBoard(gameboard,playerTurn)#Print Board
-        if playerTurn == 'w':
-            print("Turn: White")
-        if playerTurn == 'b':
-            print("Turn: Black")
-        while vMove != True:
-            # Take in Move (curX, curY, newX, newY)
-            txt = input("Make Your Move:")
-            move=txt.split()
-            curX=int(move[0])
-            curY=int(move[1])
-            newX=int(move[2])
-            newY=int(move[3])
-            # Check if Move Valid
-            if (moveValidation(gameboard,curX,curY,newX,newY,playerTurn) == True):
-                gameboard = makeMove(gameboard, curX, curY, newX, newY)
-                vMove = True;
-            else:
-                print("Invalid Move!")
-
-        #Check if Pawn Promotion
-        for c in range(8):
-            if ( gameboard[0][c] == ['P',1]):
-                newPiece = input('Pawn Promotion! Choose Your Piece (R,N,B,Q):')
-                gameboard=pawnPromotion(gameboard,0,c,newPiece)
-        for c in range(8):
-            if (gameboard[7][c] == ['p',1] ):
-                newPiece = input('Pawn Promotion! Choose Your Piece (r,n,b,q):')
-                gameboard=pawnPromotion(gameboard,7,c,newPiece)
-
-        #Check for Check/CheckMate
-        if playerTurn == 'w':
-            if (isCheck(gameboard, 'b')):
-                if (isCheckMate(gameboard, 'b')):
-                    winner = 'White'
-                    print("Winner: ", winner)
-                else:
-                    print("Check")
-        elif playerTurn == 'b':
-            if (isCheck(gameboard, 'w')):
-                if (isCheckMate(gameboard, 'w')):
-                    winner = 'Black'
-                    print("Winner: ", winner)
-                else:
-                    print("Check")
-        # Change Player Turn
-        if playerTurn == 'w':
-            playerTurn = 'b'
-        else:
-            playerTurn = 'w'
+# for the sake of simplicity, let's assume player 1 is white and player 2 is black
 
 ############################################################################
-gameManager(); #This Line Runs the game
+if __name__ == '__main__':
+    web.run_app(app, port=8089)

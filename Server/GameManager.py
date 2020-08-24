@@ -37,18 +37,19 @@ async def handle_message(sid, room):
     userName = ""
     response = {
         "userName": "",
-        #"isWhite:": ""
+        "isWhite:": ""
     }
     if (connectionCount == 1):
         response["userName"] = "Player 1"
-        response["isWhite"] = "true"
+        response["isWhite"] = "white"
         player1SID = sid
     elif (connectionCount == 2):
         response["userName"] = "Player 2"
-        response["isWhite"] = "false"
+        response["isWhite"] = "black"
         player2SID = sid
     else:
         response["userName"] = "Spectator"
+        response["isWhite"] = ""
     await sio.emit('getUserName', response, room=sid)
 
     # have to wait for player 2 to know who he is first before we can do a proper game
@@ -60,6 +61,12 @@ def handle_message(sid, room):
     sio.leave_room(sid, room=room)
     global connectionCount 
     connectionCount = connectionCount - 1
+
+@sio.on('restartGame')
+async def handle_message(sid, room):
+    global connectionCount 
+    if (connectionCount == 2):
+        await createGame()
 
 #moveJson should be in format {"curX": int, "curY": int, "newX": int, "promotion": char}
 @sio.on('applyMove')

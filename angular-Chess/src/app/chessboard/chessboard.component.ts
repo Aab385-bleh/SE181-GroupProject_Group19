@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { WebsocketService } from '../websocket.service';
 import { PawnPromotionDialogComponent } from '../pawn-promotion-dialog/pawn-promotion-dialog.component';
-// import { GameOverDialogComponent } from '../game-over-dialog/game-over-dialog.component'
 import { MatDialog } from '@angular/material/dialog';
 
 @Component({
@@ -11,26 +10,21 @@ import { MatDialog } from '@angular/material/dialog';
 })
 export class ChessboardComponent implements OnInit {
 
-  ChessBoard: Board = new Board();
+  // constants
   Columns: string[] = ["A", "B", "C", "D", "E", "F", "G", "H"];
   Rows: number[] = [1, 2, 3, 4, 5, 6, 7, 8];
+  gameRoom: string = "gameRoom";
 
-  whoseTurn: string;
-  localUser: string;
-  isWhitePlayer: boolean;
-  opposingPlayer: string;
-
+  // variables
+  ChessBoard: Board = new Board();
   isPieceChosen: boolean = false;
   pieceChosen: Square = null;
   isLocationChosen: boolean = false;
   locationChosen: Square = null;
-  gameRoom="gameRoom";
 
   constructor(private websocketservice: WebsocketService, public promotiondialog: MatDialog, public gameoverdialog: MatDialog) { }
 
   ngOnInit(): void {
-    //test
-    // this.isWhitePlayer = true;
     this.getRejectedMove();
     this.getUpdatedBoard();
     this.getUserName();
@@ -38,8 +32,7 @@ export class ChessboardComponent implements OnInit {
   }
 
   startGame() {
-    this.whoseTurn = "White";
-    this.ChessBoard.createStartBoard();
+    this.websocketservice.restartGame(this.gameRoom);
   }
 
   // SEND MOVE TO WEBSOCKET SERVICE
@@ -52,16 +45,15 @@ export class ChessboardComponent implements OnInit {
       "newY": move.newPosition.coordinates[1],
       "promotion": move.promotedPiece
     };
-    //alert("attempting to move: " + move.currentPosition.coordinates[0] + move.currentPosition.coordinates[1] + move.newPosition.coordinates[0]+ move.newPosition.coordinates[1]);
     this.websocketservice.applyMove(coords, this.gameRoom);
 
     return true;
   }
 
   async checkForPawnPromotion(move: Move) {
-    if ((move.currentPosition.piece.toLowerCase() == 'p') && !this.isWhitePlayer && (move.newPosition.coordinates[0] == 7)) {  // white pawn promotion
+    if ((move.currentPosition.piece.toLowerCase() == 'p') && !this.ChessBoard.isWhitePlayer && (move.newPosition.coordinates[0] == 7)) {  // white pawn promotion
       // continue
-    } else if ((move.currentPosition.piece.toLowerCase() == 'p') && this.isWhitePlayer && (move.newPosition.coordinates[0] == 0)) {  // black pawn promotion
+    } else if ((move.currentPosition.piece.toLowerCase() == 'p') && this.ChessBoard.isWhitePlayer && (move.newPosition.coordinates[0] == 0)) {  // black pawn promotion
       // continue
     } else {
       return "none";
@@ -73,7 +65,7 @@ export class ChessboardComponent implements OnInit {
     return dialogRef.afterClosed().toPromise().then(response => {
       var result = "none";
       if (response) {
-        alert("promoting pawn to " + response.promotedPiece);
+        // alert("promoting pawn to " + response.promotedPiece);
         console.log(response.promotedPiece)
         result=response.promotedPiece;
       } else {
@@ -104,7 +96,6 @@ export class ChessboardComponent implements OnInit {
     this.websocketservice.getUpdatedBoard().subscribe(response => {
       if (response) {
         console.log(JSON.stringify(response));
-        //console.log(response.data.gameBoard)
         updatedBoard = response.gameBoard;
         playerTurn = response.playerTurn;
         player = response.check;
@@ -112,25 +103,11 @@ export class ChessboardComponent implements OnInit {
         
         console.log(response.winner)
         if (winner != "none") {
-          alert("GAME OVER. " + winner + " has won.");
-          // TODO: fix game over dialog
-          // const dialoggo = this.gameoverdialog.open(GameOverDialogComponent, {data: {theWinner: winner}});
-          // dialoggo.afterClosed().subscribe(response => {
-          //   if (response) {
-          //     if(response.decision == 'startnew') {
-          //       this.ChessBoard.createStartBoard(); // RESET BOARD
-          //     }
-          //   }
-          // });
-          
+          // alert("GAME OVER. " + winner + " has won.");
+          this.ChessBoard.endGame(winner);
         } else {
-          console.log(playerTurn)
-          if (playerTurn == 'w') {
-            this.whoseTurn = "White";
-          } else if (playerTurn == 'b') {
-            this.whoseTurn = "Black";
-          }
-          this.ChessBoard.updateBoard(updatedBoard);    // UPDATE BOARD
+          // UPDATE BOARD & WHOSE TURN
+          this.ChessBoard.updateBoard(updatedBoard, playerTurn);
         }
       }
     },
@@ -143,14 +120,9 @@ export class ChessboardComponent implements OnInit {
   getUserName() {
     this.websocketservice.getUserName().subscribe(response => {
       if (response) {
-        console.log(response.userName + response.isWhite)
-        this.localUser = response.userName;
-        this.isWhitePlayer = response.isWhite;
-        if (response.userName == 'Player 1') {
-          this.opposingPlayer = 'Player 2';
-        } else {
-          this.opposingPlayer = 'Player 1';
-        }
+        console.log("SENDING USER TO BOARD: ", response.userName, response.isWhite);
+        // SETTING LOCAL USER & ISWHITE
+        this.ChessBoard.setLocalUser(response.userName, response.isWhite);
       }
     },
     err => console.error('Observer for getting Username got an error: ' + err),
@@ -207,92 +179,42 @@ export class ChessboardComponent implements OnInit {
    return icon;
   }
 
-  /* TESTING ONLY */
-  testBoard: string[][] = [
-    ['.', 'n', 'b', 'q', 'k', '.', 'n', 'r'],
-    ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-    ['.', '.', '.', '.', '.', '.', '.', '.'],
-    ['.', 'Q', '.', '.', '.', 'P', '.', '.'],
-    ['.', '.', '.', '.', '.', '.', '.', 'N'],
-    ['.', '.', '.', '.', '.', '.', 'r', '.'],
-    ['P', 'P', 'P', 'b', 'P', 'P', 'P', 'P'],
-    ['R', 'N', 'B', '.', 'K', 'B', '.', 'R']
-  ];
-  testUpdateBoard() { // testing only
-    this.ChessBoard.updateBoard(this.testBoard);
-  }
-  /* END TESTING ONLY */
-
-
-
   // MAKING A MOVE
   selectSquare(sq: Square) {
-    if (this.isWhitePlayer == false && (this.whoseTurn == "White")) {
+    if (!this.ChessBoard.isWhitePlayer && (this.ChessBoard.whoseTurn == "w")) {
       alert("It is not your turn. Please wait.");
       return;
-    } else if (this.isWhitePlayer==true && (this.whoseTurn == "Black")) {
+    } else if (this.ChessBoard.isWhitePlayer && (this.ChessBoard.whoseTurn == "b")) {
       alert("It is not your turn. Please wait.");
+      return;
+    } else if (this.ChessBoard.whoseTurn == "none") {
+      alert("Game over. Please start a new game.");
       return;
     }
 
     if (!this.isPieceChosen) {
-      //if (sq.isOccupied) {
-        this.isPieceChosen = true;
-        sq.isSelected = true;
-        this.pieceChosen = sq;
-      //} else {
-      //  alert("Choose a square that's occupied.");
-      //}
-    // } else if (this.isPieceChosen) {
-    //   if(sq.isOccupied && (this.pieceChosen == sq)) {
-    //     // deselect
-    //     this.pieceChosen.isSelected = false;
-    //     this.isPieceChosen = false;
-    //     this.pieceChosen = null;
-    //     this.locationChosen.isSelected = false;
-    //     this.isLocationChosen = false;
-    //     this.locationChosen = null;
-      //}else if (sq.isOccupied && (this.pieceChosen != sq)) {
-        // if ((sq.piece == sq.piece.toLowerCase()) && (this.pieceChosen.piece == this.pieceChosen.piece.toLowerCase())) {
-        //   alert("Invalid. Both selected squares contain pieces on the same team. (lower)");
-        // } else if ((sq.piece == sq.piece.toUpperCase()) && (this.pieceChosen.piece == this.pieceChosen.piece.toUpperCase())) {
-        //   alert("Invalid. Both selected squares contain pieces on the same team. (upper)");
-        // } else {
-        //   sq.isSelected = true;
-        //   this.isLocationChosen = true;
-        //   this.locationChosen = sq;
+      this.isPieceChosen = true;
+      sq.isSelected = true;
+      this.pieceChosen = sq;
+    } else {
+      sq.isSelected = true;
+      this.isLocationChosen = true;
+      this.locationChosen = sq;
 
-        //   var newMove: Move = new Move(this.pieceChosen, this.locationChosen, "none");
-        //   this.applyMove(newMove);      // APPLY MOVE ***
+      var newMove: Move = new Move(this.pieceChosen, this.locationChosen, "none");
+      this.applyMove(newMove); // VALIDATE & ATTEMPT MOVE
 
-        //   // deselecting
-        //   this.pieceChosen.isSelected = false;
-        //   this.isPieceChosen = false;
-        //   this.pieceChosen = null;
-        //   this.locationChosen.isSelected = false;
-        //   this.isLocationChosen = false;
-        //   this.locationChosen = null;
-        // }
-      } else {
-        sq.isSelected = true;
-        this.isLocationChosen = true;
-        this.locationChosen = sq;
-
-        var newMove: Move = new Move(this.pieceChosen, this.locationChosen, "none");
-        this.applyMove(newMove); // APPLY MOVE ***
-
-        // deselecting
-        this.pieceChosen.isSelected = false;
-        this.isPieceChosen = false;
-        this.pieceChosen = null;
-        this.locationChosen.isSelected = false;
-        this.isLocationChosen = false;
-        this.locationChosen = null;
-      }
+      // deselecting
+      this.pieceChosen.isSelected = false;
+      this.isPieceChosen = false;
+      this.pieceChosen = null;
+      this.locationChosen.isSelected = false;
+      this.isLocationChosen = false;
+      this.locationChosen = null;
     }
   }
 
-//}
+}
 
 class Square {
   coordinates: number[] = null;
@@ -319,31 +241,35 @@ class Board {
   Rows = ["1", "2", "3", "4", "5", "6", "7", "8"];
   Columns = ["a", "b", "c", "d", "e", "f", "g", "h"];
   BoardMatrix: Square[][] = EmptyBoard.createEmptyBoard(this.Rows, this.Columns);
+  localUser: string;
+  isWhitePlayer: boolean;
+  whoseTurn: string;
+  displayTurn: string;
+  opposingUser: string;
   
-  createStartBoard() {
-    var startBoard: string[][] = [
-      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
-      ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-      ['.', '.', '.', '.', '.', '.', '.', '.'],
-      ['.', '.', '.', '.', '.', '.', '.', '.'],
-      ['.', '.', '.', '.', '.', '.', '.', '.'],
-      ['.', '.', '.', '.', '.', '.', '.', '.'],
-      ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-      ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
-    ];
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        if (startBoard[i][j] != this.BoardMatrix[i][j].piece) {
-          this.BoardMatrix[i][j].piece = startBoard[i][j];
-          if(startBoard[i][j] != '.') {
-            this.BoardMatrix[i][j].isOccupied = true;
-          }
-        }
-      }
+  setLocalUser(username: string, isWhite: string) {
+    this.localUser = username;
+    if (isWhite == 'white') {
+      this.isWhitePlayer = true;
+    } else {
+      this.isWhitePlayer = false;
     }
+    if (username == 'Player 1') {
+      this.opposingUser = 'Player 2';
+    } else if (username == 'Player 2') {
+      this.opposingUser = 'Player 1';
+      this.BoardMatrix = EmptyBoard.createEmptyBoard(this.Rows, this.Columns);
+    }
+    console.log("LOCAL USER: ", this.localUser, this.isWhitePlayer);
   }
 
-  updateBoard(newBoard: string[][]) {
+  updateBoard(newBoard: string[][], playerTurn: string) {
+    this.whoseTurn = playerTurn;
+    if (playerTurn == 'w') {
+      this.displayTurn = "Player 1 (White)";
+    } else if (playerTurn == 'b') {
+      this.displayTurn = "Player 2 (Black)";
+    }
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
         if (newBoard[i][j] != this.BoardMatrix[i][j].piece) {
@@ -355,13 +281,18 @@ class Board {
       }
     }
   }
+
+  endGame(winner: string) {
+    alert("GAME OVER. " + winner + " has won.");
+    this.whoseTurn = "none";
+  }
   
 }
 
 class EmptyBoard {
   static createEmptyBoard(rows: string[], columns: string[]) {
     var Squares: Square[][] = new Array<Square[]>(8);
-    var isOddSquare: boolean = true;
+    var isOddSquare: boolean = false;
     for (let i = 0; i < 8; i++) {
       Squares[i] = new Array<Square>(8);
       for (let j = 0; j < 8; j++) {

@@ -21,10 +21,10 @@
                 <th class="element table-axis">{{8-i}}</th>
                 <td *ngFor="let c of Columns, let j = index" 
                 [style.background]="ChessBoard.BoardMatrix[7-i][j].oddSquare ? '#FECE9E' : '#D18B46'"
-                [style.border]="(ChessBoard.isWhitePlayer ? ChessBoard.BoardMatrix[i][j].isSelected : ChessBoard.BoardMatrix[7-i][j].isSelected) ? '2px solid red' : '2px solid transparent'" >
+                [style.border]="(ChessBoard.isWhitePlayer ? ChessBoard.BoardMatrix[i][j].isSelected : ChessBoard.BoardMatrix[7-i][7-j].isSelected) ? '2px solid red' : '2px solid transparent'" >
                 <img 
-                    [src]="ChessBoard.isWhitePlayer ? getIcon(ChessBoard.BoardMatrix[i][j].piece) : getIcon(ChessBoard.BoardMatrix[7-i][j].piece)" 
-                    (click)="selectSquare(ChessBoard.isWhitePlayer ? ChessBoard.BoardMatrix[i][j] : ChessBoard.BoardMatrix[7-i][j])" 
+                    [src]="ChessBoard.isWhitePlayer ? getIcon(ChessBoard.BoardMatrix[i][j].piece) : getIcon(ChessBoard.BoardMatrix[7-i][7-j].piece)" 
+                    (click)="selectSquare(ChessBoard.isWhitePlayer ? ChessBoard.BoardMatrix[i][j] : ChessBoard.BoardMatrix[7-i][7-j])" 
                         class="element"
                         style="cursor: pointer;">
                 </td>

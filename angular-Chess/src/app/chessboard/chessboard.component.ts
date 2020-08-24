@@ -240,7 +240,7 @@ class Move {
 class Board {
   Rows = ["1", "2", "3", "4", "5", "6", "7", "8"];
   Columns = ["a", "b", "c", "d", "e", "f", "g", "h"];
-  BoardMatrix: Square[][] = EmptyBoard.createEmptyBoard(this.Rows, this.Columns, false);
+  BoardMatrix: Square[][] = EmptyBoard.createEmptyBoard(this.Rows, this.Columns);
   localUser: string;
   isWhitePlayer: boolean;
   whoseTurn: string;
@@ -258,7 +258,7 @@ class Board {
       this.opposingUser = 'Player 2';
     } else if (username == 'Player 2') {
       this.opposingUser = 'Player 1';
-      this.BoardMatrix = EmptyBoard.createEmptyBoard(this.Rows, this.Columns, true);
+      this.BoardMatrix = EmptyBoard.createEmptyBoard(this.Rows, this.Columns);
     }
     console.log("LOCAL USER: ", this.localUser, this.isWhitePlayer);
   }
@@ -290,9 +290,9 @@ class Board {
 }
 
 class EmptyBoard {
-  static createEmptyBoard(rows: string[], columns: string[], colorSwitch: boolean) {
+  static createEmptyBoard(rows: string[], columns: string[]) {
     var Squares: Square[][] = new Array<Square[]>(8);
-    var isOddSquare: boolean = colorSwitch;
+    var isOddSquare: boolean = false;
     for (let i = 0; i < 8; i++) {
       Squares[i] = new Array<Square>(8);
       for (let j = 0; j < 8; j++) {

@@ -38,7 +38,6 @@ export class ChessboardComponent implements OnInit {
   }
 
   startGame() {
-
     this.whoseTurn = "White";
     this.ChessBoard.createStartBoard();
   }
@@ -53,7 +52,7 @@ export class ChessboardComponent implements OnInit {
       "newY": move.newPosition.coordinates[1],
       "promotion": move.promotedPiece
     };
-    alert("attempting to move: " + move.currentPosition.coordinates[0] + move.currentPosition.coordinates[1] + move.newPosition.coordinates[0]+ move.newPosition.coordinates[1]);
+    //alert("attempting to move: " + move.currentPosition.coordinates[0] + move.currentPosition.coordinates[1] + move.newPosition.coordinates[0]+ move.newPosition.coordinates[1]);
     this.websocketservice.applyMove(coords, this.gameRoom);
 
     return true;
@@ -111,6 +110,7 @@ export class ChessboardComponent implements OnInit {
         player = response.check;
         winner = response.winner;
         
+        console.log(response.winner)
         if (winner != "none") {
           alert("GAME OVER. " + winner + " has won.");
           // TODO: fix game over dialog
@@ -227,11 +227,10 @@ export class ChessboardComponent implements OnInit {
 
   // MAKING A MOVE
   selectSquare(sq: Square) {
-
-    if (!this.isWhitePlayer && (this.whoseTurn == "White")) {
+    if (this.isWhitePlayer == false && (this.whoseTurn == "White")) {
       alert("It is not your turn. Please wait.");
       return;
-    } else if (this.isWhitePlayer && (this.whoseTurn == "Black")) {
+    } else if (this.isWhitePlayer==true && (this.whoseTurn == "Black")) {
       alert("It is not your turn. Please wait.");
       return;
     }

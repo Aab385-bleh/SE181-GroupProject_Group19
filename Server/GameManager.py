@@ -680,6 +680,7 @@ def isCheck(board, player):
 # Return: True/False
 def isCheckMate(board, player):
     possibleMoves = []
+    legalMoves=[]
     currentBoard = copy.deepcopy(board)
     if (player == 'w'):
         # Can King move out of Check?
@@ -688,13 +689,14 @@ def isCheckMate(board, player):
         while row < 8 and col < 8:
             if (board[row][col][0] in ['K']):
                 possibleMoves = (findMoves(board, row, col ))
+                legalMoves = friendlyFire(board, row, col, possibleMoves)
                 break
             else:
                 col+=1
             if col == 8 and row < 8:
                 row+=1
                 col=0
-        legalMoves = friendlyFire(board, row, col, possibleMoves)
+        #legalMoves = friendlyFire(board, row, col, possibleMoves)
         testBoard = copy.deepcopy(currentBoard)
         for m in legalMoves:
             testMove = makeMove(testBoard, row, col, m[0], m[1])
@@ -706,11 +708,13 @@ def isCheckMate(board, player):
         row=0
         col=0
         possibleMoves = []
+        legalMoves = []
         allies=[]
         while row < 8 and col < 8:
             if (board[row][col][0] in ['R','N','B','Q','P']):
                 allies.append([row, col]) #Get location of Piece
-                possibleMoves.append((findMoves(board, row, col ))) #Get Moves for that Piece
+                possibleMoves = (findMoves(board, row, col )) #Get Moves for that Piece
+                legalMoves.append(friendlyFire(board, row, col, possibleMoves))
             col+=1
             if col == 8 and row < 8:
                 row+=1
@@ -718,7 +722,57 @@ def isCheckMate(board, player):
         testBoard = copy.deepcopy(currentBoard)
         i = 0
         while i < len(allies):
-            for m in possibleMoves[i]:
+            for m in legalMoves[i]:
+                testMove = makeMove(testBoard, allies[i][0], allies[i][1], m[0], m[1])
+                if (isCheck(testMove, player)):
+                    testBoard = copy.deepcopy(currentBoard)
+                else:
+                    return(False) #Is not in Checkmate
+            i+=1
+         #Is in Checkmate
+        return(True)
+
+    if (player == 'b'):
+        # Can King move out of Check?
+        row=0
+        col=0
+        while row < 8 and col < 8:
+            if (board[row][col][0] in ['k']):
+                possibleMoves = (findMoves(board, row, col ))
+                legalMoves = friendlyFire(board, row, col, possibleMoves)
+                break
+            else:
+                col+=1
+            if col == 8 and row < 8:
+                row+=1
+                col=0
+        #legalMoves = friendlyFire(board, row, col, possibleMoves)
+        testBoard = copy.deepcopy(currentBoard)
+        for m in legalMoves:
+            testMove = makeMove(testBoard, row, col, m[0], m[1])
+            if (isCheck(testMove, player)):
+                testBoard = copy.deepcopy(currentBoard)
+            else:
+                return(False) #Is not in Checkmate
+        # Can Other Piece move out of Check?
+        row=0
+        col=0
+        possibleMoves = []
+        legalMoves = []
+        allies=[]
+        while row < 8 and col < 8:
+            if (board[row][col][0] in ['r','n','b','q','p']):
+                allies.append([row, col]) #Get location of Piece
+                possibleMoves = (findMoves(board, row, col )) #Get Moves for that Piece
+                legalMoves.append(friendlyFire(board, row, col, possibleMoves))
+            col+=1
+            if col == 8 and row < 8:
+                row+=1
+                col=0
+        testBoard = copy.deepcopy(currentBoard)
+        i = 0
+        while i < len(allies):
+            for m in legalMoves[i]:
                 testMove = makeMove(testBoard, allies[i][0], allies[i][1], m[0], m[1])
                 if (isCheck(testMove, player)):
                     testBoard = copy.deepcopy(currentBoard)

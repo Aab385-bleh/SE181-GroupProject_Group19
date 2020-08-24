@@ -15,14 +15,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatIconModule, MatFormFieldModule, MatDialogModule, MatInputModule, MatFormFieldControl } from '@angular/material';
 import {MatRadioModule} from '@angular/material/radio';
-import { GameOverDialogComponent } from './game-over-dialog/game-over-dialog.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ChessboardComponent,
-    PawnPromotionDialogComponent,
-    GameOverDialogComponent
+    PawnPromotionDialogComponent
   ],
   imports: [
     BrowserModule,

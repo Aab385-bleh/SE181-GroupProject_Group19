@@ -62,6 +62,12 @@ def handle_message(sid, room):
     global connectionCount 
     connectionCount = connectionCount - 1
 
+@sio.on('restartGame')
+async def handle_message(sid, room):
+    global connectionCount 
+    if (connectionCount == 2):
+        await createGame()
+
 #moveJson should be in format {"curX": int, "curY": int, "newX": int, "promotion": char}
 @sio.on('applyMove')
 async def handle_message(sid, moveJson, game_room):

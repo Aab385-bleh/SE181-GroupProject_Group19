@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { WebsocketService } from '../websocket.service';
 import { PawnPromotionDialogComponent } from '../pawn-promotion-dialog/pawn-promotion-dialog.component';
-// import { GameOverDialogComponent } from '../game-over-dialog/game-over-dialog.component'
 import { MatDialog } from '@angular/material/dialog';
 
 @Component({
@@ -33,7 +32,7 @@ export class ChessboardComponent implements OnInit {
   }
 
   startGame() {
-    this.ChessBoard.createStartBoard();
+    this.websocketservice.restartGame(this.gameRoom);
   }
 
   // SEND MOVE TO WEBSOCKET SERVICE
@@ -104,17 +103,8 @@ export class ChessboardComponent implements OnInit {
         
         console.log(response.winner)
         if (winner != "none") {
-          alert("GAME OVER. " + winner + " has won.");
-          // TODO: fix game over dialog
-          // const dialoggo = this.gameoverdialog.open(GameOverDialogComponent, {data: {theWinner: winner}});
-          // dialoggo.afterClosed().subscribe(response => {
-          //   if (response) {
-          //     if(response.decision == 'startnew') {
-          //       this.ChessBoard.createStartBoard(); // RESET BOARD
-          //     }
-          //   }
-          // });
-          
+          // alert("GAME OVER. " + winner + " has won.");
+          this.ChessBoard.endGame(winner);
         } else {
           // UPDATE BOARD & WHOSE TURN
           this.ChessBoard.updateBoard(updatedBoard, playerTurn);
@@ -197,6 +187,9 @@ export class ChessboardComponent implements OnInit {
     } else if (this.ChessBoard.isWhitePlayer && (this.ChessBoard.whoseTurn == "b")) {
       alert("It is not your turn. Please wait.");
       return;
+    } else if (this.ChessBoard.whoseTurn == "none") {
+      alert("Game over. Please start a new game.");
+      return;
     }
 
     if (!this.isPieceChosen) {
@@ -247,36 +240,13 @@ class Move {
 class Board {
   Rows = ["1", "2", "3", "4", "5", "6", "7", "8"];
   Columns = ["a", "b", "c", "d", "e", "f", "g", "h"];
-  BoardMatrix: Square[][] = EmptyBoard.createEmptyBoard(this.Rows, this.Columns);
+  BoardMatrix: Square[][] = EmptyBoard.createEmptyBoard(this.Rows, this.Columns, false);
   localUser: string;
   isWhitePlayer: boolean;
   whoseTurn: string;
   displayTurn: string;
   opposingUser: string;
   
-  createStartBoard() {
-    var startBoard: string[][] = [
-      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
-      ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-      ['.', '.', '.', '.', '.', '.', '.', '.'],
-      ['.', '.', '.', '.', '.', '.', '.', '.'],
-      ['.', '.', '.', '.', '.', '.', '.', '.'],
-      ['.', '.', '.', '.', '.', '.', '.', '.'],
-      ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-      ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
-    ];
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        if (startBoard[i][j] != this.BoardMatrix[i][j].piece) {
-          this.BoardMatrix[i][j].piece = startBoard[i][j];
-          if(startBoard[i][j] != '.') {
-            this.BoardMatrix[i][j].isOccupied = true;
-          }
-        }
-      }
-    }
-  }
-
   setLocalUser(username: string, isWhite: string) {
     this.localUser = username;
     if (isWhite == 'white') {
@@ -288,6 +258,7 @@ class Board {
       this.opposingUser = 'Player 2';
     } else if (username == 'Player 2') {
       this.opposingUser = 'Player 1';
+      this.BoardMatrix = EmptyBoard.createEmptyBoard(this.Rows, this.Columns, true);
     }
     console.log("LOCAL USER: ", this.localUser, this.isWhitePlayer);
   }
@@ -310,13 +281,18 @@ class Board {
       }
     }
   }
+
+  endGame(winner: string) {
+    alert("GAME OVER. " + winner + " has won.");
+    this.whoseTurn = "none";
+  }
   
 }
 
 class EmptyBoard {
-  static createEmptyBoard(rows: string[], columns: string[]) {
+  static createEmptyBoard(rows: string[], columns: string[], colorSwitch: boolean) {
     var Squares: Square[][] = new Array<Square[]>(8);
-    var isOddSquare: boolean = true;
+    var isOddSquare: boolean = colorSwitch;
     for (let i = 0; i < 8; i++) {
       Squares[i] = new Array<Square>(8);
       for (let j = 0; j < 8; j++) {

@@ -22,7 +22,9 @@ export class WebsocketService {
     this.socket.emit('leave_room', roomName)
   }
   
-
+  restartGame(roomName: string) {
+    this.socket.emit('restartGame', roomName)
+  }
 
   applyMove(move: any, room: string) {
     // SEND MOVE TO PYTHON

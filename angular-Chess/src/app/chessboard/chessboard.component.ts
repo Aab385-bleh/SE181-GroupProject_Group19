@@ -125,9 +125,9 @@ export class ChessboardComponent implements OnInit {
           
         } else {
           console.log(playerTurn)
-          if (playerTurn = 'w') {
+          if (playerTurn == 'w') {
             this.whoseTurn = "White";
-          } else if (playerTurn = 'b') {
+          } else if (playerTurn == 'b') {
             this.whoseTurn = "Black";
           }
           this.ChessBoard.updateBoard(updatedBoard);    // UPDATE BOARD

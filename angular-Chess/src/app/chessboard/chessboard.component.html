@@ -10,7 +10,7 @@
     <div class="col middle">
         <table cellspacing="0" cellpadding="0">
             <tr>
-                <th colspan="10" class="element">Opposing Player</th>
+                <th colspan="10" class="element">Opposing Player: {{ChessBoard.opposingUser}}</th>
             </tr>
             <tr>
                 <th class="element table-axis"></th>
@@ -23,7 +23,7 @@
                     [style.background]="ChessBoard.BoardMatrix[7-i][j].oddSquare ? '#FECE9E' : '#D18B46'"
                     [style.border]="ChessBoard.BoardMatrix[7-i][j].isSelected ? '2px solid red' : '2px solid transparent'" >
                     <img 
-                        [src]="isWhitePlayer ? getIcon(ChessBoard.BoardMatrix[7-i][j].piece) : getIcon(ChessBoard.BoardMatrix[i][j].piece)" 
+                        [src]="ChessBoard.isWhitePlayer ? getIcon(ChessBoard.BoardMatrix[i][j].piece) : getIcon(ChessBoard.BoardMatrix[7-i][j].piece)" 
                         (click)="selectSquare(ChessBoard.BoardMatrix[7-i][j])" 
                         class="element"
                         style="cursor: pointer;">
@@ -36,13 +36,13 @@
                 <th class="element table-axis"></th>
             </tr>
             <tr>
-                <th colspan="10" class="element">You</th>
+                <th colspan="10" class="element">You: {{ChessBoard.localUser}}</th>
             </tr>
         </table>
     </div>
     <div class="col right" style="text-align: center;">
         <button (click)="startGame()" class="button">Start New Game</button>
-        <h3>Player Turn: {{whoseTurn}} </h3>
+        <h3>Player Turn: {{ChessBoard.whoseTurn}} </h3>
     </div>
 </div>
 

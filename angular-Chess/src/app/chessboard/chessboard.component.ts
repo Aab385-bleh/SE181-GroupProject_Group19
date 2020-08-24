@@ -66,7 +66,7 @@ export class ChessboardComponent implements OnInit {
     return dialogRef.afterClosed().toPromise().then(response => {
       var result = "none";
       if (response) {
-        alert("promoting pawn to " + response.promotedPiece);
+        // alert("promoting pawn to " + response.promotedPiece);
         console.log(response.promotedPiece)
         result=response.promotedPiece;
       } else {
@@ -251,6 +251,7 @@ class Board {
   localUser: string;
   isWhitePlayer: boolean;
   whoseTurn: string;
+  displayTurn: string;
   opposingUser: string;
   
   createStartBoard() {
@@ -292,10 +293,11 @@ class Board {
   }
 
   updateBoard(newBoard: string[][], playerTurn: string) {
+    this.whoseTurn = playerTurn;
     if (playerTurn == 'w') {
-      this.whoseTurn = "Player 1 (White)";
+      this.displayTurn = "Player 1 (White)";
     } else if (playerTurn == 'b') {
-      this.whoseTurn = "Player 2 (Black)";
+      this.displayTurn = "Player 2 (Black)";
     }
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {

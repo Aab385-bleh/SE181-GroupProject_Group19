@@ -10,7 +10,7 @@
     <div class="col middle">
         <table cellspacing="0" cellpadding="0">
             <tr>
-                <th colspan="10" class="element">Opposing Player: {{ChessBoard.opposingUser}}</th>
+                <th colspan="10" class="element">Opponent: {{ChessBoard.opposingUser}}</th>
             </tr>
             <tr>
                 <th class="element table-axis"></th>
@@ -20,11 +20,11 @@
             <tr *ngFor="let r of Rows, let i = index">
                 <th class="element table-axis">{{8-i}}</th>
                 <td *ngFor="let c of Columns, let j = index" 
-                    [style.background]="ChessBoard.BoardMatrix[7-i][j].oddSquare ? '#FECE9E' : '#D18B46'"
-                    [style.border]="ChessBoard.BoardMatrix[7-i][j].isSelected ? '2px solid red' : '2px solid transparent'" >
-                    <img 
-                        [src]="ChessBoard.isWhitePlayer ? getIcon(ChessBoard.BoardMatrix[i][j].piece) : getIcon(ChessBoard.BoardMatrix[7-i][j].piece)" 
-                        (click)="selectSquare(ChessBoard.BoardMatrix[7-i][j])" 
+                [style.background]="ChessBoard.BoardMatrix[7-i][j].oddSquare ? '#FECE9E' : '#D18B46'"
+                [style.border]="(ChessBoard.isWhitePlayer ? ChessBoard.BoardMatrix[i][j].isSelected : ChessBoard.BoardMatrix[7-i][j].isSelected) ? '2px solid red' : '2px solid transparent'" >
+                <img 
+                    [src]="ChessBoard.isWhitePlayer ? getIcon(ChessBoard.BoardMatrix[i][j].piece) : getIcon(ChessBoard.BoardMatrix[7-i][j].piece)" 
+                    (click)="selectSquare(ChessBoard.isWhitePlayer ? ChessBoard.BoardMatrix[i][j] : ChessBoard.BoardMatrix[7-i][j])" 
                         class="element"
                         style="cursor: pointer;">
                 </td>
@@ -42,7 +42,7 @@
     </div>
     <div class="col right" style="text-align: center;">
         <button (click)="startGame()" class="button">Start New Game</button>
-        <h3>Player Turn: {{ChessBoard.whoseTurn}} </h3>
+        <h3>Player Turn: {{ChessBoard.displayTurn}} </h3>
     </div>
 </div>
 

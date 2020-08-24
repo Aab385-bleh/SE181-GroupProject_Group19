@@ -37,7 +37,7 @@ async def handle_message(sid, room):
     userName = ""
     response = {
         "userName": "",
-        "isWhite:": "false"
+        #"isWhite:": ""
     }
     if (connectionCount == 1):
         response["userName"] = "Player 1"
@@ -97,17 +97,15 @@ async def handle_message(sid, moveJson, game_room):
                     #Castle King Side
                     gameboard = makeMove(gameboard, 7, 7, 7, 5)
     
-        print("Pawn Before")
         #Check if Pawn Promotion
         for c in range(8):
             if (gameboard[0][c] == ['P',1]):
                 newPiece = move["promotion"]
                 gameboard=pawnPromotion(gameboard,0,c,newPiece,'w')
         for c in range(8):
-            if (gameboard[7][c] == ['p',1] ):
+            if (gameboard[7][c] == ['p',1]):
                 newPiece = move["promotion"]
                 gameboard=pawnPromotion(gameboard,7,c,newPiece,'b')
-        print("Pawn after")
 
         sboard = simpleBoard(gameboard, 'w')
         #data to send down to Client

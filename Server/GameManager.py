@@ -1,15 +1,19 @@
 # Filename: GameManager.py
 # Description: Back-End to Chess Game Term Project
 # Created: 8/17/2020
-# Updated: 8/21/2020
+# Updated: 8/24/2020
 # SE181 - Group 19
+
+####################################################################################################################################
+
+# Import Packages
 from aiohttp import web
 import socketio
 import asyncio
 import copy
 import json
 
-sio = socketio.AsyncServer(async_mode='aiohttp', cors_allowed_origins=['http://localhost:4200','http://localhost:1234'], logger=True, engineio_logger=True)
+sio = socketio.AsyncServer(async_mode='aiohttp', cors_allowed_origins='*', logger=True, engineio_logger=True)
 
 app = web.Application()
 sio.attach(app)
@@ -26,7 +30,9 @@ winner = 'none'
 playerTurn = 'none'
 gameboard = ''
 
-# function to be performed when a client attempts to join a room, presumably the gameRoom
+# Event: Join_Room
+# Description: Gets a request from client and adds client to server room
+# Message: join_room
 @sio.on('join_room')
 async def handle_message(sid, room):
     sio.enter_room(sid, room=room)
@@ -56,26 +62,33 @@ async def handle_message(sid, room):
     if (connectionCount == 2):
         await createGame()
 
+# Event: Leave_Room
+# Description: Gets a request from client and removes client from server room
+# Message: leave_room
 @sio.on('leave_room')
 def handle_message(sid, room):
     sio.leave_room(sid, room=room)
     global connectionCount 
     connectionCount = connectionCount - 1
 
+# Event: RestartGame
+# Description: Gets a request from client and creates a new game
+# Message: restartGame 
 @sio.on('restartGame')
 async def handle_message(sid, room):
     global connectionCount 
     if (connectionCount == 2):
         await createGame()
 
-#moveJson should be in format {"curX": int, "curY": int, "newX": int, "promotion": char}
+# Event: ApplyMove
+# Description: Communicates with clients to progress game and update board
+# Message: applyMove 
 @sio.on('applyMove')
 async def handle_message(sid, moveJson, game_room):
     global gameboard
     global playerTurn
     vMove = False
-    #have to load into Python dictionary to work with it
-    move = (moveJson)
+    move = (moveJson) #moveJson should be in format {"curX": int, "curY": int, "newX": int, "promotion": char}
     print(move)
     curX=int(move["curX"])
     curY=int(move["curY"])
@@ -150,10 +163,10 @@ async def handle_message(sid, moveJson, game_room):
     else:
         await sio.emit('getRejectedMoveResponse', "Move Rejected", room=sid)
 
-    
-
-
-    
+# Function: CreateGame
+# Description: Begins Game with 2 Players
+# Arguements:
+# Return:    
 async def createGame(): 
     global playerTurn
     global gameboard
@@ -840,8 +853,6 @@ def simpleBoard(board,player):
     #for row in simpleB:
     #    print(row)
     return(simpleB)
-
-# for the sake of simplicity, let's assume player 1 is white and player 2 is black
 
 ############################################################################
 if __name__ == '__main__':
